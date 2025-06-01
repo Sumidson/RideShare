@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, 
@@ -19,15 +20,20 @@ import {
 } from 'lucide-react';
 
 const RidesPage = () => {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Simulate router.push for demo
+  // Handle booking navigation
   const handleBooking = (rideId) => {
-    // In actual Next.js app, use: router.push(`/booking-details?rideId=${rideId}`)
-    console.log(`Redirecting to /booking-details?rideId=${rideId}`);
-    alert(`Redirecting to booking details for ride ${rideId}`);
+    try {
+      router.push(`/booking-details?rideId=${rideId}`);
+    } catch (error) {
+      console.error('Navigation error:', error);
+      // Fallback to window.location if router fails
+      window.location.href = `/booking-details?rideId=${rideId}`;
+    }
   };
 
   const rides = [

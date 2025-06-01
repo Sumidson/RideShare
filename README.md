@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
@@ -38,3 +39,6 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 =======
 # Rideshare
 >>>>>>> 48f3aa60f3875e5eeb4aa7c8d53e6a819a8a2575
+=======
+# RideShare
+>>>>>>> ff512b103cfa33d5b2ffff6620d2c3b0b7c9b92f
