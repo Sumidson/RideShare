@@ -1,22 +1,20 @@
 'use client';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, 
   MapPin, 
   Clock, 
-  User, 
   Star, 
   Car, 
-  Navigation, 
   Filter, 
   ArrowRight, 
   Calendar, 
   DollarSign,
   Users,
-  Route,
-  SlidersHorizontal
+  Shield,
+  Zap,
+  ChevronDown
 } from 'lucide-react';
 
 const RidesPage = () => {
@@ -25,13 +23,11 @@ const RidesPage = () => {
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Handle booking navigation
   const handleBooking = (rideId) => {
     try {
-      router.push(`/booking-details?rideId=${rideId}`);
+      router.push(`/booking-details/${rideId}`);
     } catch (error) {
       console.error('Navigation error:', error);
-      // Fallback to window.location if router fails
       window.location.href = `/booking-details?rideId=${rideId}`;
     }
   };
@@ -49,11 +45,13 @@ const RidesPage = () => {
       price: 25,
       seats: 3,
       car: 'Honda Civic',
-      avatar: '👩‍💼',
+      avatar: 'SJ',
       duration: '45 min',
       verified: true,
       carColor: 'Silver',
-      description: 'Comfortable ride with AC and phone charger available'
+      description: 'Comfortable ride with AC and phone charger',
+      distance: '18.5 km',
+      instantBook: true
     },
     {
       id: 2,
@@ -67,11 +65,13 @@ const RidesPage = () => {
       price: 18,
       seats: 2,
       car: 'Toyota Camry',
-      avatar: '👨‍💻',
+      avatar: 'MC',
       duration: '32 min',
       verified: true,
       carColor: 'Black',
-      description: 'Quiet ride, perfect for work calls'
+      description: 'Quiet ride, perfect for work calls',
+      distance: '12.3 km',
+      instantBook: false
     },
     {
       id: 3,
@@ -85,11 +85,13 @@ const RidesPage = () => {
       price: 22,
       seats: 4,
       car: 'Nissan Altima',
-      avatar: '👩‍🎓',
+      avatar: 'ED',
       duration: '38 min',
       verified: true,
       carColor: 'White',
-      description: 'Pet-friendly ride with extra space'
+      description: 'Pet-friendly ride with extra space',
+      distance: '15.7 km',
+      instantBook: true
     },
     {
       id: 4,
@@ -103,11 +105,13 @@ const RidesPage = () => {
       price: 15,
       seats: 1,
       car: 'BMW 3 Series',
-      avatar: '👨‍🏫',
+      avatar: 'JW',
       duration: '25 min',
       verified: false,
       carColor: 'Blue',
-      description: 'Premium ride with leather seats'
+      description: 'Premium ride with leather seats',
+      distance: '8.2 km',
+      instantBook: false
     }
   ];
 
@@ -119,243 +123,215 @@ const RidesPage = () => {
     if (selectedFilter === 'today') return matchesSearch && ride.date === 'Today';
     if (selectedFilter === 'tomorrow') return matchesSearch && ride.date === 'Tomorrow';
     if (selectedFilter === 'verified') return matchesSearch && ride.verified;
+    if (selectedFilter === 'instant') return matchesSearch && ride.instantBook;
     
     return matchesSearch;
   });
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { 
-      opacity: 1,
-      transition: { staggerChildren: 0.1 }
-    }
-  };
-
-  const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-white">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
-        >
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
-            Available Rides
+        <div className="pt-12 pb-8 text-center">
+          <h1 className="text-4xl md:text-5xl font-light text-gray-900 mb-4">
+            Available <span className="font-medium">Rides</span>
           </h1>
-          <p className="text-gray-600 text-lg">Find your perfect ride and travel with confidence</p>
-        </motion.div>
+          <p className="text-xl text-gray-600 font-light">
+            Find your perfect journey with trusted drivers
+          </p>
+        </div>
 
-        {/* Search and Filters */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white rounded-2xl shadow-lg p-6 mb-8"
-        >
-          {/* Search Bar */}
-          <div className="relative mb-4">
-            <Search className="absolute left-4 top-4 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search by location or driver name..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-            />
-          </div>
+        {/* Search Section */}
+        <div className="bg-gray-50 rounded-2xl p-8 mb-12 border border-gray-100">
+          <div className="max-w-2xl mx-auto">
+            <div className="relative mb-6">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search destinations or driver names..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-300"
+              />
+            </div>
 
-          {/* Filter Toggle */}
-          <div className="flex justify-between items-center">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors"
-            >
-              <SlidersHorizontal className="w-5 h-5" />
-              <span>Filters</span>
-            </motion.button>
-            <div className="text-sm text-gray-500">
-              {filteredRides.length} ride{filteredRides.length !== 1 ? 's' : ''} found
+            {/* Filters */}
+            <div className="flex flex-wrap gap-3 justify-center">
+              {[
+                { key: 'all', label: 'All Rides', count: rides.length },
+                { key: 'today', label: 'Today', count: rides.filter(r => r.date === 'Today').length },
+                { key: 'tomorrow', label: 'Tomorrow', count: rides.filter(r => r.date === 'Tomorrow').length },
+                { key: 'verified', label: 'Verified', count: rides.filter(r => r.verified).length },
+                { key: 'instant', label: 'Instant Book', count: rides.filter(r => r.instantBook).length }
+              ].map((filter) => (
+                <button
+                  key={filter.key}
+                  onClick={() => setSelectedFilter(filter.key)}
+                  className={`px-6 py-3 rounded-full font-medium transition-all duration-300 ${
+                    selectedFilter === filter.key
+                      ? 'bg-gray-900 text-white'
+                      : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                  }`}
+                >
+                  {filter.label}
+                  {filter.count > 0 && (
+                    <span className={`ml-2 text-sm ${
+                      selectedFilter === filter.key ? 'text-gray-300' : 'text-gray-400'
+                    }`}>
+                      {filter.count}
+                    </span>
+                  )}
+                </button>
+              ))}
             </div>
           </div>
+        </div>
 
-          {/* Filters */}
-          <AnimatePresence>
-            {showFilters && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="mt-4 pt-4 border-t border-gray-200"
-              >
-                <div className="flex flex-wrap gap-3">
-                  {[
-                    { key: 'all', label: 'All Rides' },
-                    { key: 'today', label: 'Today' },
-                    { key: 'tomorrow', label: 'Tomorrow' },
-                    { key: 'verified', label: 'Verified Drivers' }
-                  ].map((filter) => (
-                    <motion.button
-                      key={filter.key}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setSelectedFilter(filter.key)}
-                      className={`px-4 py-2 rounded-full font-medium transition-all duration-300 ${
-                        selectedFilter === filter.key
-                          ? 'bg-blue-600 text-white shadow-lg'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
-                    >
-                      {filter.label}
-                    </motion.button>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
+        {/* Results Summary */}
+        <div className="flex items-center justify-between mb-8">
+          <p className="text-gray-600 font-light">
+            {filteredRides.length} ride{filteredRides.length !== 1 ? 's' : ''} available
+          </p>
+          <button className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors duration-300">
+            <span className="text-sm font-medium">Sort by price</span>
+            <ChevronDown className="w-4 h-4" />
+          </button>
+        </div>
 
-        {/* Rides List */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="space-y-6"
-        >
+        {/* Rides Grid */}
+        <div className="space-y-6">
           {filteredRides.length === 0 ? (
-            <motion.div
-              variants={cardVariants}
-              className="text-center py-12"
-            >
-              <div className="text-6xl mb-4">🚗</div>
-              <h3 className="text-xl font-semibold text-gray-600 mb-2">No rides found</h3>
-              <p className="text-gray-500">Try adjusting your search or filters</p>
-            </motion.div>
+            <div className="text-center py-20">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Search className="w-8 h-8 text-gray-400" />
+              </div>
+              <h3 className="text-xl font-medium text-gray-900 mb-2">No rides found</h3>
+              <p className="text-gray-600 font-light">Try adjusting your search or filters</p>
+            </div>
           ) : (
             filteredRides.map((ride) => (
-              <motion.div
+              <div
                 key={ride.id}
-                variants={cardVariants}
-                whileHover={{ y: -4, boxShadow: "0 20px 40px rgba(0,0,0,0.1)" }}
-                className="bg-white rounded-2xl shadow-lg p-6 transition-all duration-300 border border-gray-100"
+                className="bg-white border border-gray-100 rounded-2xl p-6 hover:border-gray-200 hover:shadow-lg transition-all duration-300 group"
               >
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div className="grid lg:grid-cols-12 gap-6 items-center">
+                  
                   {/* Driver Info */}
-                  <div className="flex items-start space-x-4">
-                    <div className="text-4xl">{ride.avatar}</div>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <h2 className="text-xl font-bold text-gray-800">{ride.driver}</h2>
-                        {ride.verified && (
-                          <div className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">
-                            Verified
-                          </div>
-                        )}
+                  <div className="lg:col-span-3">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium">
+                        {ride.avatar}
                       </div>
-                      <div className="flex items-center space-x-1 mb-2">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="font-semibold text-gray-700">{ride.rating}</span>
-                        <span className="text-gray-500 text-sm">({ride.reviewCount} reviews)</span>
-                      </div>
-                      <div className="flex items-center space-x-2 text-gray-600">
-                        <Car className="h-4 w-4" />
-                        <span className="text-sm">{ride.car} • {ride.carColor}</span>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-medium text-gray-900">{ride.driver}</h3>
+                          {ride.verified && (
+                            <div className="flex items-center gap-1">
+                              <Shield className="w-3 h-3 text-green-600" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                          <span className="text-sm text-gray-600">{ride.rating}</span>
+                          <span className="text-xs text-gray-400">({ride.reviewCount})</span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">{ride.car} • {ride.carColor}</p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Route Info */}
-                  <div className="flex-1 max-w-md">
-                    <div className="bg-gray-50 rounded-xl p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                          <span className="font-medium text-gray-800">{ride.from}</span>
-                        </div>
-                        <Route className="w-4 h-4 text-gray-400" />
-                        <div className="flex items-center space-x-2">
-                          <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                          <span className="font-medium text-gray-800">{ride.to}</span>
-                        </div>
+                  {/* Route */}
+                  <div className="lg:col-span-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span className="font-medium text-gray-900">{ride.from}</span>
                       </div>
-                      
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div className="flex items-center space-x-2 text-gray-600">
-                          <Calendar className="h-4 w-4" />
-                          <span>{ride.date}</span>
-                        </div>
-                        <div className="flex items-center space-x-2 text-gray-600">
-                          <Clock className="h-4 w-4" />
-                          <span>{ride.time}</span>
-                        </div>
+                      <div className="flex items-center gap-3 pl-5">
+                        <div className="w-px h-6 bg-gray-200"></div>
                       </div>
-                      
-                      <div className="mt-3 text-xs text-gray-500">
-                        {ride.description}
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                        <span className="font-medium text-gray-900">{ride.to}</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Price and Booking */}
-                  <div className="flex flex-col items-end space-y-4">
-                    <div className="text-right">
-                      <div className="flex items-center space-x-4 mb-2">
-                        <div className="flex items-center space-x-2 text-gray-600">
-                          <Users className="h-4 w-4" />
-                          <span className="text-sm">{ride.seats} seats</span>
-                        </div>
-                        <div className="flex items-center space-x-2 text-gray-600">
-                          <Clock className="h-4 w-4" />
-                          <span className="text-sm">{ride.duration}</span>
-                        </div>
+                  {/* Trip Details */}
+                  <div className="lg:col-span-3">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Calendar className="w-4 h-4" />
+                        <span>{ride.date}, {ride.time}</span>
                       </div>
-                      <div className="flex items-center space-x-1">
-                        <DollarSign className="h-5 w-5 text-green-600" />
-                        <span className="text-2xl font-bold text-gray-800">{ride.price}</span>
-                        <span className="text-gray-500 text-sm">per seat</span>
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Clock className="w-4 h-4" />
+                        <span>{ride.duration} • {ride.distance}</span>
                       </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Users className="w-4 h-4" />
+                        <span>{ride.seats} seats available</span>
+                      </div>
+                      {ride.instantBook && (
+                        <div className="flex items-center gap-2 text-sm text-blue-600">
+                          <Zap className="w-4 h-4" />
+                          <span>Instant booking</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Price & Action */}
+                  <div className="lg:col-span-2 text-right">
+                    <div className="mb-4">
+                      <div className="text-2xl font-light text-gray-900 mb-1">
+                        ${ride.price}
+                      </div>
+                      <p className="text-sm text-gray-500">per seat</p>
                     </div>
                     
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                    <button
                       onClick={() => handleBooking(ride.id)}
-                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-2"
+                      className="w-full bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 group-hover:scale-105 flex items-center justify-center gap-2"
                     >
                       <span>Book Now</span>
-                      <ArrowRight className="h-4 w-4" />
-                    </motion.button>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
-              </motion.div>
+
+                {/* Description */}
+                <div className="mt-4 pt-4 border-t border-gray-50">
+                  <p className="text-sm text-gray-600 font-light">{ride.description}</p>
+                </div>
+              </div>
             ))
           )}
-        </motion.div>
+        </div>
 
-        {/* Load More Button */}
+        {/* Load More */}
         {filteredRides.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="text-center mt-12"
-          >
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-white hover:bg-gray-50 text-gray-700 px-8 py-3 rounded-xl font-semibold border border-gray-200 shadow-md hover:shadow-lg transition-all duration-300"
-            >
-              Load More Rides
-            </motion.button>
-          </motion.div>
+          <div className="text-center py-16">
+            <button className="px-8 py-4 border border-gray-200 text-gray-700 rounded-xl font-medium hover:border-gray-300 hover:bg-gray-50 transition-all duration-300">
+              Load more rides
+            </button>
+          </div>
         )}
+
+        {/* Bottom CTA */}
+        <div className="py-16 text-center border-t border-gray-100 mt-16">
+          <h2 className="text-2xl font-light text-gray-900 mb-4">
+            Can't find the perfect ride?
+          </h2>
+          <p className="text-gray-600 font-light mb-8">
+            Create your own trip and let drivers come to you
+          </p>
+          <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-medium transition-all duration-300 hover:scale-105">
+            Post Your Trip
+          </button>
+        </div>
       </div>
     </div>
   );

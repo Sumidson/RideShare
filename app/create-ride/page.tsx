@@ -1,6 +1,5 @@
 'use client';
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MapPin, 
   Calendar, 
@@ -14,7 +13,9 @@ import {
   MessageSquare,
   Plus,
   Check,
-  ArrowRight
+  ArrowRight,
+  ArrowLeft,
+  ChevronRight
 } from 'lucide-react';
 
 interface RideData {
@@ -52,7 +53,9 @@ const CreateRidePage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const vehicleTypes = ['Sedan', 'SUV', 'Hatchback', 'Coupe', 'Minivan', 'Pickup Truck'];
+  const vehicleTypes = [
+    'Sedan', 'SUV', 'Hatchback', 'Coupe', 'Minivan', 'Pickup Truck'
+  ];
 
   const handleInputChange = (field: keyof RideData, value: string | number) => {
     setRideData(prev => ({ ...prev, [field]: value }));
@@ -87,407 +90,409 @@ const CreateRidePage: React.FC = () => {
     }
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { duration: 0.6, staggerChildren: 0.1 }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
-  };
-
-  const stepVariants = {
-    hidden: { opacity: 0, x: 100 },
-    visible: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: -100 }
-  };
+  const steps = [
+    { number: 1, title: 'Journey Details', description: 'Where and when' },
+    { number: 2, title: 'Ride Details', description: 'Vehicle and pricing' },
+    { number: 3, title: 'Contact Info', description: 'Your details' }
+  ];
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center p-4">
-        <motion.div
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", duration: 0.6 }}
-          className="bg-white rounded-3xl shadow-2xl p-8 text-center max-w-md w-full"
-        >
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: "spring" }}
-            className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6"
-          >
-            <Check className="w-10 h-10 text-green-600" />
-          </motion.div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Ride Created Successfully!</h2>
-          <p className="text-gray-600 mb-6">Your ride has been posted and is now visible to potential passengers.</p>
+      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+        <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-8 text-center max-w-md w-full">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Check className="w-8 h-8 text-green-600" />
+          </div>
+          <h2 className="text-2xl font-medium text-gray-900 mb-4">Ride Created Successfully!</h2>
+          <p className="text-gray-600 font-light mb-8">
+            Your ride has been posted and is now visible to potential passengers.
+          </p>
           <button
             onClick={() => window.location.reload()}
-            className="w-full bg-gradient-to-r from-blue-600 to-green-600 text-white py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-green-700 transition-all duration-300"
+            className="w-full bg-gray-900 hover:bg-gray-800 text-white py-3 rounded-xl font-medium transition-all duration-300"
           >
             Create Another Ride
           </button>
-        </motion.div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 py-8 px-4">
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="max-w-4xl mx-auto"
-      >
+    <div className="min-h-screen bg-white py-12 px-4">
+      <div className="max-w-4xl mx-auto">
+        
         {/* Header */}
-        <motion.div variants={itemVariants} className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent mb-4">
-            Create Your Ride
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-light text-gray-900 mb-4">
+            Create Your <span className="font-medium">Ride</span>
           </h1>
-          <p className="text-gray-600 text-lg">Share your journey and connect with fellow travelers</p>
-        </motion.div>
+          <p className="text-xl text-gray-600 font-light">
+            Share your journey and connect with fellow travelers
+          </p>
+        </div>
 
         {/* Progress Steps */}
-        <motion.div variants={itemVariants} className="flex justify-center mb-8">
-          <div className="flex items-center space-x-4">
-            {[1, 2, 3].map((step) => (
-              <React.Fragment key={step}>
-                <div className={`flex items-center justify-center w-10 h-10 rounded-full font-semibold transition-all duration-300 ${
-                  currentStep >= step 
-                    ? 'bg-gradient-to-r from-blue-600 to-green-600 text-white shadow-lg' 
-                    : 'bg-gray-200 text-gray-500'
-                }`}>
-                  {step}
-                </div>
-                {step < 3 && (
-                  <div className={`w-8 h-1 rounded transition-all duration-300 ${
-                    currentStep > step ? 'bg-gradient-to-r from-blue-600 to-green-600' : 'bg-gray-200'
-                  }`} />
-                )}
-              </React.Fragment>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Form Container */}
-        <motion.div 
-          variants={itemVariants}
-          className="bg-white rounded-3xl shadow-2xl p-6 md:p-8 mx-auto max-w-2xl"
-        >
-          <AnimatePresence mode="wait">
-            {/* Step 1: Journey Details */}
-            {currentStep === 1 && (
-              <motion.div
-                key="step1"
-                variants={stepVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                transition={{ duration: 0.3 }}
-              >
-                <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-                  <MapPin className="w-6 h-6 mr-2 text-blue-600" />
-                  Journey Details
-                </h2>
-                
-                <div className="space-y-6">
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-gray-700 font-semibold mb-2">From</label>
-                      <div className="relative">
-                        <MapPin className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                        <input
-                          type="text"
-                          value={rideData.from}
-                          onChange={(e) => handleInputChange('from', e.target.value)}
-                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                          placeholder="Starting location"
-                        />
-                      </div>
+        <div className="mb-16">
+          <div className="flex justify-center">
+            <div className="flex items-center space-x-8 max-w-2xl">
+              {steps.map((step, index) => (
+                <React.Fragment key={step.number}>
+                  <div className="flex items-center space-x-4">
+                    <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center font-medium transition-all duration-300 ${
+                      currentStep >= step.number 
+                        ? 'border-gray-900 bg-gray-900 text-white' 
+                        : 'border-gray-200 text-gray-400'
+                    }`}>
+                      {step.number}
                     </div>
-                    
-                    <div>
-                      <label className="block text-gray-700 font-semibold mb-2">To</label>
-                      <div className="relative">
-                        <MapPin className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                        <input
-                          type="text"
-                          value={rideData.to}
-                          onChange={(e) => handleInputChange('to', e.target.value)}
-                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                          placeholder="Destination"
-                        />
+                    <div className="text-left hidden sm:block">
+                      <div className={`font-medium transition-colors duration-300 ${
+                        currentStep >= step.number ? 'text-gray-900' : 'text-gray-400'
+                      }`}>
+                        {step.title}
                       </div>
+                      <div className="text-sm text-gray-500">{step.description}</div>
                     </div>
                   </div>
+                  {index < steps.length - 1 && (
+                    <ChevronRight className="w-5 h-5 text-gray-300 hidden sm:block" />
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+        </div>
 
-                  {/* Total Ride Price */}
+        {/* Form Container */}
+        <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-8 max-w-2xl mx-auto">
+          
+          {/* Step 1: Journey Details */}
+          {currentStep === 1 && (
+            <div>
+              <div className="mb-8">
+                <h2 className="text-2xl font-medium text-gray-900 mb-2">Journey Details</h2>
+                <p className="text-gray-600 font-light">Tell us about your planned trip</p>
+              </div>
+              
+              <div className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-gray-700 font-semibold mb-2">Total Ride Price</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      From
+                    </label>
                     <div className="relative">
-                      <DollarSign className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                      <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="text"
+                        value={rideData.from}
+                        onChange={(e) => handleInputChange('from', e.target.value)}
+                        className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-300"
+                        placeholder="Starting location"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      To
+                    </label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="text"
+                        value={rideData.to}
+                        onChange={(e) => handleInputChange('to', e.target.value)}
+                        className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-300"
+                        placeholder="Destination"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Total Ride Price
+                  </label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="number"
+                      value={rideData.totalPrice}
+                      onChange={(e) => handleInputChange('totalPrice', e.target.value)}
+                      className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-300"
+                      placeholder="Total cost for the entire ride"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Enter the total cost for the entire journey (this will be split among passengers)
+                  </p>
+                </div>
+                
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Date
+                    </label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="date"
+                        value={rideData.date}
+                        onChange={(e) => handleInputChange('date', e.target.value)}
+                        className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-300"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Time
+                    </label>
+                    <div className="relative">
+                      <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="time"
+                        value={rideData.time}
+                        onChange={(e) => handleInputChange('time', e.target.value)}
+                        className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-300"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 2: Ride Details */}
+          {currentStep === 2 && (
+            <div>
+              <div className="mb-8">
+                <h2 className="text-2xl font-medium text-gray-900 mb-2">Ride Details</h2>
+                <p className="text-gray-600 font-light">Configure your vehicle and pricing</p>
+              </div>
+              
+              <div className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Available Seats
+                    </label>
+                    <div className="relative">
+                      <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <select
+                        value={rideData.seats}
+                        onChange={(e) => handleInputChange('seats', parseInt(e.target.value))}
+                        className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-300"
+                      >
+                        {[1, 2, 3, 4, 5, 6, 7].map(num => (
+                          <option key={num} value={num}>{num} seat{num > 1 ? 's' : ''}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Price per Seat
+                    </label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
                         type="number"
-                        value={rideData.totalPrice}
-                        onChange={(e) => handleInputChange('totalPrice', e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                        placeholder="Total cost for the entire ride"
+                        value={rideData.price}
+                        onChange={(e) => handleInputChange('price', e.target.value)}
+                        className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-300"
+                        placeholder="Cost per passenger"
                         min="0"
                         step="0.01"
                       />
                     </div>
-                    <p className="text-sm text-gray-500 mt-1">Enter the total cost for the entire journey (this will be split among passengers)</p>
-                  </div>
-                  
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-gray-700 font-semibold mb-2">Date</label>
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                        <input
-                          type="date"
-                          value={rideData.date}
-                          onChange={(e) => handleInputChange('date', e.target.value)}
-                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-gray-700 font-semibold mb-2">Time</label>
-                      <div className="relative">
-                        <Clock className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                        <input
-                          type="time"
-                          value={rideData.time}
-                          onChange={(e) => handleInputChange('time', e.target.value)}
-                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                        />
-                      </div>
-                    </div>
+                    <p className="text-sm text-gray-500 mt-2">Amount each passenger will pay</p>
                   </div>
                 </div>
-              </motion.div>
-            )}
-
-            {/* Step 2: Ride Details */}
-            {currentStep === 2 && (
-              <motion.div
-                key="step2"
-                variants={stepVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                transition={{ duration: 0.3 }}
-              >
-                <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-                  <Car className="w-6 h-6 mr-2 text-blue-600" />
-                  Ride Details
-                </h2>
                 
-                <div className="space-y-6">
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-gray-700 font-semibold mb-2">Available Seats</label>
-                      <div className="relative">
-                        <Users className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                        <select
-                          value={rideData.seats}
-                          onChange={(e) => handleInputChange('seats', parseInt(e.target.value))}
-                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                        >
-                          {[1, 2, 3, 4, 5, 6, 7].map(num => (
-                            <option key={num} value={num}>{num} seat{num > 1 ? 's' : ''}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-gray-700 font-semibold mb-2">Price per Seat</label>
-                      <div className="relative">
-                        <DollarSign className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                        <input
-                          type="number"
-                          value={rideData.price}
-                          onChange={(e) => handleInputChange('price', e.target.value)}
-                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                          placeholder="Cost per passenger"
-                          min="0"
-                          step="0.01"
-                        />
-                      </div>
-                      <p className="text-sm text-gray-500 mt-1">Amount each passenger will pay</p>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-gray-700 font-semibold mb-2">Vehicle Type</label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {vehicleTypes.map((type) => (
-                        <motion.button
-                          key={type}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => handleInputChange('vehicleType', type)}
-                          className={`p-3 rounded-xl border-2 transition-all duration-300 ${
-                            rideData.vehicleType === type
-                              ? 'border-blue-500 bg-blue-50 text-blue-700'
-                              : 'border-gray-200 hover:border-gray-300'
-                          }`}
-                        >
-                          {type}
-                        </motion.button>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-gray-700 font-semibold mb-2">Additional Information</label>
-                    <div className="relative">
-                      <MessageSquare className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                      <textarea
-                        value={rideData.description}
-                        onChange={(e) => handleInputChange('description', e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 resize-none"
-                        rows={3}
-                        placeholder="Any special instructions or preferences..."
-                      />
-                    </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-4">
+                    Vehicle Type
+                  </label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {vehicleTypes.map((type) => (
+                      <button
+                        key={type}
+                        onClick={() => handleInputChange('vehicleType', type)}
+                        className={`p-4 rounded-xl border transition-all duration-300 text-left hover:border-gray-300 ${
+                          rideData.vehicleType === type
+                            ? 'border-gray-900 bg-gray-50'
+                            : 'border-gray-200'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <Car className="w-5 h-5 text-gray-600" />
+                          <span className="font-medium text-gray-900">{type}</span>
+                        </div>
+                      </button>
+                    ))}
                   </div>
                 </div>
-              </motion.div>
-            )}
-
-            {/* Step 3: Contact Information */}
-            {currentStep === 3 && (
-              <motion.div
-                key="step3"
-                variants={stepVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                transition={{ duration: 0.3 }}
-              >
-                <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-                  <User className="w-6 h-6 mr-2 text-blue-600" />
-                  Contact Information
-                </h2>
                 
-                <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Additional Information
+                  </label>
+                  <div className="relative">
+                    <MessageSquare className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                    <textarea
+                      value={rideData.description}
+                      onChange={(e) => handleInputChange('description', e.target.value)}
+                      className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-300 resize-none"
+                      rows={4}
+                      placeholder="Any special instructions or preferences..."
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Contact Information */}
+          {currentStep === 3 && (
+            <div>
+              <div className="mb-8">
+                <h2 className="text-2xl font-medium text-gray-900 mb-2">Contact Information</h2>
+                <p className="text-gray-600 font-light">How can passengers reach you</p>
+              </div>
+              
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Driver Name
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="text"
+                      value={rideData.driverName}
+                      onChange={(e) => handleInputChange('driverName', e.target.value)}
+                      className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-300"
+                      placeholder="Your full name"
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-gray-700 font-semibold mb-2">Driver Name</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Phone Number
+                    </label>
                     <div className="relative">
-                      <User className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                      <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
-                        type="text"
-                        value={rideData.driverName}
-                        onChange={(e) => handleInputChange('driverName', e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                        placeholder="Your full name"
+                        type="tel"
+                        value={rideData.phone}
+                        onChange={(e) => handleInputChange('phone', e.target.value)}
+                        className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-300"
+                        placeholder="Your phone number"
                       />
                     </div>
                   </div>
                   
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-gray-700 font-semibold mb-2">Phone Number</label>
-                      <div className="relative">
-                        <Phone className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                        <input
-                          type="tel"
-                          value={rideData.phone}
-                          onChange={(e) => handleInputChange('phone', e.target.value)}
-                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                          placeholder="Your phone number"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-gray-700 font-semibold mb-2">Email Address</label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                        <input
-                          type="email"
-                          value={rideData.email}
-                          onChange={(e) => handleInputChange('email', e.target.value)}
-                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                          placeholder="your.email@example.com"
-                        />
-                      </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Email Address
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="email"
+                        value={rideData.email}
+                        onChange={(e) => handleInputChange('email', e.target.value)}
+                        className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-300"
+                        placeholder="your.email@example.com"
+                      />
                     </div>
                   </div>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                  <h3 className="font-medium text-gray-900 mb-2">Privacy Notice</h3>
+                  <p className="text-sm text-gray-600 font-light">
+                    Your contact information will only be shared with passengers who book your ride. 
+                    We never share your details with third parties.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Navigation Buttons */}
-          <div className="flex justify-between mt-8 pt-6 border-t border-gray-200">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+          <div className="flex items-center justify-between pt-8 mt-8 border-t border-gray-100">
+            <button
               onClick={prevStep}
               disabled={currentStep === 1}
-              className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
                 currentStep === 1
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  ? 'text-gray-400 cursor-not-allowed'
+                  : 'text-gray-700 hover:bg-gray-50 border border-gray-200'
               }`}
             >
+              <ArrowLeft className="w-4 h-4" />
               Previous
-            </motion.button>
+            </button>
 
             {currentStep < 3 ? (
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <button
                 onClick={nextStep}
                 disabled={!isStepValid()}
-                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center ${
+                className={`flex items-center gap-2 px-8 py-3 rounded-xl font-medium transition-all duration-300 ${
                   isStepValid()
-                    ? 'bg-gradient-to-r from-blue-600 to-green-600 text-white hover:from-blue-700 hover:to-green-700'
+                    ? 'bg-gray-900 hover:bg-gray-800 text-white'
                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 }`}
               >
                 Next
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </motion.button>
+                <ArrowRight className="w-4 h-4" />
+              </button>
             ) : (
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <button
                 onClick={handleSubmit}
                 disabled={!isStepValid() || isSubmitting}
-                className={`px-8 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center ${
+                className={`flex items-center gap-2 px-8 py-3 rounded-xl font-medium transition-all duration-300 ${
                   isStepValid() && !isSubmitting
-                    ? 'bg-gradient-to-r from-blue-600 to-green-600 text-white hover:from-blue-700 hover:to-green-700'
+                    ? 'bg-gray-900 hover:bg-gray-800 text-white'
                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 }`}
               >
                 {isSubmitting ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                     Creating...
                   </>
                 ) : (
                   <>
-                    <Plus className="w-4 h-4 mr-2" />
+                    <Plus className="w-4 h-4" />
                     Create Ride
                   </>
                 )}
-              </motion.button>
+              </button>
             )}
           </div>
-        </motion.div>
-      </motion.div>
+        </div>
+
+        {/* Help Section */}
+        <div className="mt-16 text-center">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Need help creating your ride?</h3>
+          <p className="text-gray-600 font-light mb-6 max-w-2xl mx-auto">
+            Our support team is here to help you get started with ride sharing. 
+            Contact us if you have any questions about pricing, safety, or the booking process.
+          </p>
+          <button className="text-blue-600 hover:text-blue-700 font-medium transition-colors duration-300">
+            Contact Support
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
