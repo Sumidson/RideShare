@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Smartphone, Users, CheckCircle, Download, MapPin, Plus, Star, ArrowRight, X, DollarSign, AlertTriangle, Shield, Phone, Clock, Activity, Calculator } from 'lucide-react';
+import Navbar from '@/components/Navbar';
 
 // Enhanced motion variants
 const sectionVariants = {
@@ -208,7 +209,6 @@ const CostCalculator = () => {
 const ElegantRideshareLanding = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-gray-50 to-slate-200">
-      
       {/* Hero Section */}
       <motion.section 
         className="relative py-20 lg:py-32 overflow-hidden"

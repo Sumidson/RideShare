@@ -3,7 +3,7 @@
 import { createContext, useContext, ReactNode } from 'react'
 // in ./app/providers/AuthProvider.tsx
 import { useAuth } from '@/app/hooks/useAuth';
-import { User } from '@/types/auth'
+import { User } from '@/app/types/auth'
 
 interface AuthContextType {
   user: User | null

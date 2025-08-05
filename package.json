@@ -24,7 +24,8 @@
     "prisma": "^6.13.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "tailwind": "^2.3.1"
+    "tailwind": "^2.3.1",
+    "zod": "^4.0.14"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

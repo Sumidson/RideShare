@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/admin'
-import { syncUserWithSupabase } from '@/lib/auth'
+import { supabaseAdmin } from '@/app/lib/supabase/admin'
+import { syncUserWithSupabase } from '@/app/lib/auth'
 import { z } from 'zod'
 
 const signUpSchema = z.object({
@@ -37,9 +37,16 @@ export async function POST(request: NextRequest) {
       message: 'User created successfully',
       user: data.user 
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
+    let errorMessage = 'An internal server error occurred';
+    
+    // Check if the error is an instance of the Error class
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+  
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: errorMessage },
       { status: 500 }
     )
   }
