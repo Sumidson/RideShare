@@ -1,4 +1,5 @@
 import { AuthProvider } from '../app/providers/AuthProvider'
+import { LoadingProvider } from '../app/providers/LoadingProvider'
 import './globals.css'
 import Navbar from '../components/Navbar'
 
@@ -11,8 +12,10 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AuthProvider>
-          <Navbar />
-          {children}
+          <LoadingProvider>
+            <Navbar />
+            {children}
+          </LoadingProvider>
         </AuthProvider>
       </body>
     </html>

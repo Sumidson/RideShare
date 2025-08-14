@@ -43,7 +43,7 @@ export default function RegisterForm() {
       setError(error)
     } else {
       setSuccess(true)
-      setTimeout(() => router.push('/auth/login'), 2000)
+      setTimeout(() => router.push('/login'), 2000)
     }
     
     setLoading(false)

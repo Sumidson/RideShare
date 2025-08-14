@@ -1,5 +1,7 @@
 'use client';
 import React, { useState } from 'react';
+import { apiClient } from '@/app/lib/api';
+import AuthGuard from '@/components/auth/AuthGuard';
 import { 
   MapPin, 
   Calendar, 
@@ -71,10 +73,24 @@ const CreateRidePage: React.FC = () => {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsSubmitting(false);
-    setIsSuccess(true);
+    try {
+      const departureIso = new Date(`${rideData.date}T${rideData.time}:00`).toISOString();
+      const response = await apiClient.createRide({
+        origin: String(rideData.from),
+        destination: String(rideData.to),
+        departure_time: departureIso,
+        available_seats: Number(rideData.seats),
+        price_per_seat: Number(rideData.price || 0),
+        description: String(rideData.description || '')
+      });
+      if (response.error) {
+        alert(response.error);
+      } else {
+        setIsSuccess(true);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const isStepValid = () => {
@@ -119,6 +135,7 @@ const CreateRidePage: React.FC = () => {
   }
 
   return (
+    <AuthGuard>
     <div className="min-h-screen bg-white py-12 px-4">
       <div className="max-w-4xl mx-auto">
         
@@ -494,6 +511,7 @@ const CreateRidePage: React.FC = () => {
         </div>
       </div>
     </div>
+    </AuthGuard>
   );
 };
 

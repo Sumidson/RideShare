@@ -2,16 +2,29 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { useAuthContext } from '@/app/providers/AuthProvider';
+import { useRouter } from 'next/navigation';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { signIn } = useAuthContext();
+  const router = useRouter();
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    // Handle login logic here
-    console.log('Login attempted with:', { email, password });
+    setSubmitting(true);
+    setError(null);
+    const { error } = await signIn(email, password);
+    if (error) {
+      setError(error);
+    } else {
+      router.push('/dasboard');
+    }
+    setSubmitting(false);
   };
 
   return (
@@ -26,6 +39,11 @@ const LoginPage = () => {
         <p className="text-center text-gray-600 mb-8">Please enter your details to sign in.</p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+              {error}
+            </div>
+          )}
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
               Email Address
@@ -91,16 +109,17 @@ const LoginPage = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             type="submit"
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+            disabled={submitting}
+            className="w-full bg-blue-600 disabled:opacity-50 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
           >
-            Sign In
+            {submitting ? 'Signing in...' : 'Sign In'}
           </motion.button>
         </form>
 
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
             Dont have an account?{' '}
-            <a href="#" className="text-blue-600 hover:text-blue-500 font-medium">
+            <a href="/signup" className="text-blue-600 hover:text-blue-500 font-medium">
               Sign up
             </a>
           </p>

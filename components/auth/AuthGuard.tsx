@@ -13,7 +13,7 @@ interface AuthGuardProps {
 export default function AuthGuard({ 
   children, 
   requireAuth = true, 
-  redirectTo = '/auth/login' 
+  redirectTo = '/login' 
 }: AuthGuardProps) {
   const { user, loading } = useAuthContext()
   const router = useRouter()
@@ -23,7 +23,7 @@ export default function AuthGuard({
       if (requireAuth && !user) {
         router.push(redirectTo)
       } else if (!requireAuth && user) {
-        router.push('/dashboard')
+        router.push('/dasboard')
       }
     }
   }, [user, loading, requireAuth, redirectTo, router])

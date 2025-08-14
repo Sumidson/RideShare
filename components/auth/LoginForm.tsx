@@ -23,7 +23,7 @@ export default function LoginForm() {
     if (error) {
       setError(error)
     } else {
-      router.push('/dashboard')
+      router.push('/dasboard')
     }
     
     setLoading(false)

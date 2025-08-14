@@ -1,43 +1,31 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
-import { signOut } from '@/lib/auth'
+// Removed unused legacy supabase auth; using context-based auth
+import { useAuthContext } from '@/app/providers/AuthProvider'
 import { useRouter } from 'next/navigation'
 
 export default function Dashboard() {
-  const [user, setUser] = useState<any>(null)
+  type DashboardUser = { id: string; email: string; full_name?: string }
+  const [user, setUser] = useState<DashboardUser | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
+  const { user: ctxUser, signOut } = useAuthContext()
+
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        router.push('/auth/signin')
-      } else {
-        setUser(user)
-      }
-      setLoading(false)
+    if (!ctxUser) {
+      router.push('/login')
+    } else {
+      setUser(ctxUser)
     }
-    getUser()
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (event === 'SIGNED_OUT' || !session) {
-          router.push('/auth/signin')
-        }
-      }
-    )
-
-    return () => subscription.unsubscribe()
-  }, [router])
+    setLoading(false)
+  }, [ctxUser, router])
 
   const handleSignOut = async () => {
     try {
       await signOut()
-      router.push('/auth/signin')
+      router.push('/login')
     } catch (error) {
       console.error('Sign out error:', error)
     }
@@ -65,15 +53,8 @@ export default function Dashboard() {
             </div>
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                {user.user_metadata?.avatar_url && (
-                  <img
-                    src={user.user_metadata.avatar_url}
-                    alt="Profile"
-                    className="h-8 w-8 rounded-full"
-                  />
-                )}
                 <span className="text-sm font-medium text-gray-700">
-                  {user.user_metadata?.full_name || user.email}
+                  {user.full_name || user.email}
                 </span>
               </div>
               <button
@@ -102,7 +83,7 @@ export default function Dashboard() {
                 <div>
                   <span className="font-medium text-gray-600">Name:</span>
                   <span className="ml-2 text-gray-900">
-                    {user.user_metadata?.full_name || 'Not provided'}
+                    {user.full_name || 'Not provided'}
                   </span>
                 </div>
                 <div>
@@ -112,7 +93,8 @@ export default function Dashboard() {
                 <div>
                   <span className="font-medium text-gray-600">Last Sign In:</span>
                   <span className="ml-2 text-gray-900">
-                    {new Date(user.last_sign_in_at).toLocaleString()}
+                    {/* Placeholder for last sign-in */}
+                    N/A
                   </span>
                 </div>
               </div>

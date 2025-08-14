@@ -1,21 +1,12 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { apiClient } from '@/app/lib/api';
 import { useRouter } from 'next/navigation';
 // 1. Import motion and AnimatePresence from framer-motion
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, 
-  MapPin, 
-  Clock, 
-  Star, 
-  Car, 
-  Filter, 
   ArrowRight, 
-  Calendar, 
-  DollarSign,
-  Users,
-  Shield,
-  Zap,
   ChevronDown
 } from 'lucide-react';
 
@@ -63,105 +54,57 @@ const RidesPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
 
-  const handleBooking = (rideId) => {
-    router.push(`/booking-details/${rideId}`);
+  const handleBooking = (rideId: string) => {
+    router.push(`/booking-detials/${rideId}`);
   };
 
-  const rides = [
-    // ... your existing rides data remains unchanged
-    {
-        id: 1,
-        driver: 'Sarah Johnson',
-        rating: 4.8,
-        reviewCount: 127,
-        from: 'Downtown NYC',
-        to: 'JFK Airport',
-        time: '2:30 PM',
-        date: 'Today',
-        price: 25,
-        seats: 3,
-        car: 'Honda Civic',
-        avatar: 'SJ',
-        duration: '45 min',
-        verified: true,
-        carColor: 'Silver',
-        description: 'Comfortable ride with AC and phone charger',
-        distance: '18.5 km',
-        instantBook: true
-      },
-      {
-        id: 2,
-        driver: 'Michael Chen',
-        rating: 4.9,
-        reviewCount: 89,
-        from: 'Brooklyn Heights',
-        to: 'Manhattan',
-        time: '4:15 PM',
-        date: 'Today',
-        price: 18,
-        seats: 2,
-        car: 'Toyota Camry',
-        avatar: 'MC',
-        duration: '32 min',
-        verified: true,
-        carColor: 'Black',
-        description: 'Quiet ride, perfect for work calls',
-        distance: '12.3 km',
-        instantBook: false
-      },
-      {
-        id: 3,
-        driver: 'Emma Davis',
-        rating: 4.7,
-        reviewCount: 156,
-        from: 'Queens',
-        to: 'LaGuardia Airport',
-        time: '6:00 PM',
-        date: 'Tomorrow',
-        price: 22,
-        seats: 4,
-        car: 'Nissan Altima',
-        avatar: 'ED',
-        duration: '38 min',
-        verified: true,
-        carColor: 'White',
-        description: 'Pet-friendly ride with extra space',
-        distance: '15.7 km',
-        instantBook: true
-      },
-      {
-        id: 4,
-        driver: 'James Wilson',
-        rating: 4.6,
-        reviewCount: 203,
-        from: 'Times Square',
-        to: 'Central Park',
-        time: '7:45 PM',
-        date: 'Today',
-        price: 15,
-        seats: 1,
-        car: 'BMW 3 Series',
-        avatar: 'JW',
-        duration: '25 min',
-        verified: false,
-        carColor: 'Blue',
-        description: 'Premium ride with leather seats',
-        distance: '8.2 km',
-        instantBook: false
+  interface RideItem {
+    id: string
+    origin: string
+    destination: string
+    departure_time: string
+    available_seats: number
+    price_per_seat: number
+    description?: string
+    driver?: { full_name?: string; username?: string; rating?: number }
+  }
+
+  const [rides, setRides] = useState<RideItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRides = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await apiClient.getRides();
+        if (error) {
+          console.error('Failed to fetch rides:', error);
+          // If it's a database connection error, show a helpful message
+          if (error.includes('Database connection error')) {
+            setRides([]);
+            // You could set a state to show a database setup message
+          }
+        } else {
+          const items = ((data as { rides: RideItem[] })?.rides) || [];
+          setRides(items);
+        }
+      } catch (err) {
+        console.error('Error fetching rides:', err);
+        setRides([]);
+      } finally {
+        setLoading(false);
       }
-  ];
+    }
+    fetchRides();
+  }, []);
 
   // ... your filtering logic remains unchanged
   const filteredRides = rides.filter(ride => {
-    const matchesSearch = ride.from.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          ride.to.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          ride.driver.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    if (selectedFilter === 'today') return matchesSearch && ride.date === 'Today';
-    if (selectedFilter === 'tomorrow') return matchesSearch && ride.date === 'Tomorrow';
-    if (selectedFilter === 'verified') return matchesSearch && ride.verified;
-    if (selectedFilter === 'instant') return matchesSearch && ride.instantBook;
-    
+    const matchesSearch = (
+      ride.origin?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+      ride.destination?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+      ride.driver?.full_name?.toLowerCase()?.includes(searchTerm.toLowerCase())
+    );
     return matchesSearch;
   });
 
@@ -208,11 +151,7 @@ const RidesPage = () => {
               variants={containerVariants}
             >
               {[
-                { key: 'all', label: 'All Rides', count: rides.length },
-                { key: 'today', label: 'Today', count: rides.filter(r => r.date === 'Today').length },
-                { key: 'tomorrow', label: 'Tomorrow', count: rides.filter(r => r.date === 'Tomorrow').length },
-                { key: 'verified', label: 'Verified', count: rides.filter(r => r.verified).length },
-                { key: 'instant', label: 'Instant Book', count: rides.filter(r => r.instantBook).length }
+                { key: 'all', label: 'All Rides', count: rides.length }
               ].map((filter) => (
                 <motion.button
                   key={filter.key}
@@ -243,7 +182,7 @@ const RidesPage = () => {
         {/* Results Summary */}
         <motion.div className="flex items-center justify-between mb-8" variants={itemVariants}>
           <p className="text-gray-600 font-light">
-            {filteredRides.length} ride{filteredRides.length !== 1 ? 's' : ''} available
+            {filteredRides.length} ride{filteredRides.length !== 1 ? "s" : ""} available
           </p>
           <button className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors duration-300">
             <span className="text-sm font-medium">Sort by price</span>
@@ -261,7 +200,9 @@ const RidesPage = () => {
             animate="visible"
             exit="hidden"
           >
-            {filteredRides.length === 0 ? (
+             {loading ? (
+               <motion.div className="text-center py-20">Loading rides...</motion.div>
+             ) : filteredRides.length === 0 ? (
               <motion.div 
                 className="text-center py-20"
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -272,7 +213,12 @@ const RidesPage = () => {
                   <Search className="w-8 h-8 text-gray-400" />
                 </div>
                 <h3 className="text-xl font-medium text-gray-900 mb-2">No rides found</h3>
-                <p className="text-gray-600 font-light">Try adjusting your search or filters</p>
+                <p className="text-gray-600 font-light">
+                  {rides.length === 0 && !loading ? 
+                    "No rides available. This might be because the database is not set up yet. Please check the DATABASE_SETUP.md file for setup instructions." : 
+                    "Try adjusting your search or filters"
+                  }
+                </p>
               </motion.div>
             ) : (
               filteredRides.map((ride) => (
@@ -283,28 +229,29 @@ const RidesPage = () => {
                   whileHover="hover"
                   layout // This prop animates layout changes smoothly
                 >
-                    {/* ... The inner structure of your ride card remains unchanged ... */}
                     <div className="grid lg:grid-cols-12 gap-6 items-center">
                         <div className="lg:col-span-3">
-                            {/* ... driver info ... */}
+                          <div className="font-medium text-gray-900">{ride.driver?.full_name || ride.driver?.username || 'Driver'}</div>
+                          <div className="text-gray-500 text-sm">Rating: {ride.driver?.rating ?? '-'}</div>
                         </div>
                         <div className="lg:col-span-4">
-                            {/* ... route info ... */}
+                          <div className="text-gray-900 font-medium">{ride.origin} → {ride.destination}</div>
+                          <div className="text-gray-500 text-sm">{new Date(ride.departure_time).toLocaleString()}</div>
                         </div>
                         <div className="lg:col-span-3">
-                            {/* ... trip details ... */}
+                          <div className="text-gray-900">Seats: {ride.available_seats}</div>
+                          <div className="text-gray-900">Price: ${ride.price_per_seat}</div>
                         </div>
                         <div className="lg:col-span-2 text-right">
-                            {/* ... price & action ... */}
-                            <motion.button
-                              onClick={() => handleBooking(ride.id)}
-                              className="w-full bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2"
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.98 }}
-                            >
-                              <span>Book Now</span>
-                              <ArrowRight className="w-4 h-4" />
-                            </motion.button>
+                          <motion.button
+                            onClick={() => handleBooking(ride.id)}
+                            className="w-full bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <span>Book Now</span>
+                            <ArrowRight className="w-4 h-4" />
+                          </motion.button>
                         </div>
                     </div>
                     <div className="mt-4 pt-4 border-t border-gray-50">
@@ -333,7 +280,7 @@ const RidesPage = () => {
 
         <div className="py-16 text-center border-t border-gray-100 mt-16">
           <h2 className="text-2xl font-light text-gray-900 mb-4">
-            Can't find the perfect ride?
+            Can’t find the perfect ride?
           </h2>
           <p className="text-gray-600 font-light mb-8">
             Create your own trip and let drivers come to you

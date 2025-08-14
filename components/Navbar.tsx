@@ -1,11 +1,13 @@
 "use client"
 import Link from "next/link";
 import { useState } from "react";
+import { useAuthContext } from '@/app/providers/AuthProvider';
 import { Car, Menu, X, User, Plus, MapPin, Home, LogIn, LogOut, UserPlus } from "lucide-react";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const isLoggedIn = false; // Replace with your auth logic
+  const { user, signOut } = useAuthContext();
+  const isLoggedIn = !!user;
 
   const navItems = [
     { href: "/", label: "Home", icon: Home },
@@ -69,7 +71,7 @@ const Navbar = () => {
                     </Link>
                   </>
                 ) : (
-                  <button className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-xl font-medium transition-all duration-300 shadow-sm hover:shadow-md hover:scale-105">
+                  <button onClick={signOut} className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-xl font-medium transition-all duration-300 shadow-sm hover:shadow-md hover:scale-105">
                     <LogOut className="w-4 h-4" />
                     <span>Logout</span>
                   </button>
@@ -145,7 +147,7 @@ const Navbar = () => {
                   <button
                     onClick={() => {
                       setIsOpen(false);
-                      // Add logout logic here
+                      signOut();
                     }}
                     className="flex items-center justify-center space-x-3 w-full px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-all duration-300 font-medium"
                   >

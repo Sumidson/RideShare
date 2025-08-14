@@ -1,6 +1,8 @@
 "use client";
 import React, { useState } from "react";
 import { User, Mail, Lock, Eye, EyeOff, ArrowRight, Check } from "lucide-react";
+import { useAuthContext } from '@/app/providers/AuthProvider';
+import { useRouter } from 'next/navigation';
 
 const SignUpPage = () => {
   const [formData, setFormData] = useState({
@@ -13,9 +15,12 @@ const SignUpPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [apiError, setApiError] = useState<string | null>(null);
+  const { signUp } = useAuthContext();
+  const router = useRouter();
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
@@ -31,7 +36,7 @@ const SignUpPage = () => {
   };
 
   const validateForm = () => {
-    const newErrors = {};
+    const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
       newErrors.name = "Full name is required";
@@ -58,7 +63,7 @@ const SignUpPage = () => {
     return newErrors;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const newErrors = validateForm();
@@ -68,11 +73,15 @@ const SignUpPage = () => {
     }
 
     setIsSubmitting(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    setApiError(null);
+    const { error } = await signUp(formData.email, formData.password, { full_name: formData.name });
+    if (error) {
+      setApiError(error);
+      setIsSubmitting(false);
+      return;
+    }
     setIsSubmitting(false);
-    
-    console.log("Sign Up attempted with:", formData);
+    router.push('/login');
   };
 
   const passwordStrength = () => {
@@ -105,6 +114,11 @@ const SignUpPage = () => {
         {/* Form */}
         <div className="bg-white border border-gray-100 rounded-2xl shadow-lg p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
+            {apiError && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                {apiError}
+              </div>
+            )}
             
             {/* Full Name */}
             <div>
