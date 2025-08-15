@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 import { verifyJWT } from '@/app/lib/auth'
-import { z } from 'zod' // Fixed: was importing from 'z' instead of 'zod'
+import { z } from 'zod'
+import { Prisma } from '@prisma/client'
 
 const createRideSchema = z.object({
   origin: z.string().min(1, "Origin is required"),
   destination: z.string().min(1, "Destination is required"),
-  departure_time: z.string().datetime(),
-  available_seats: z.number().min(1).max(8),
-  price_per_seat: z.number().min(0),
+  departure_time: z.string(),
+  available_seats: z.number().min(1, "At least 1 seat required"),
+  price_per_seat: z.number().min(0, "Price must be positive"),
   description: z.string().optional()
 })
 
@@ -35,16 +36,16 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(query.limit || '10')
     const skip = (page - 1) * limit
 
-    const where: any = {
+    const where: Prisma.RideWhereInput = {
       status: 'ACTIVE'
     }
 
     if (query.origin) {
-      where.origin = { contains: query.origin, mode: 'insensitive' }
+      where.origin = { contains: query.origin }
     }
 
     if (query.destination) {
-      where.destination = { contains: query.destination, mode: 'insensitive' }
+      where.destination = { contains: query.destination }
     }
 
     if (query.date) {
@@ -73,6 +74,9 @@ export async function GET(request: NextRequest) {
             }
           },
           bookings: {
+            where: {
+              status: 'CONFIRMED'
+            },
             select: {
               seats_booked: true
             }
@@ -88,11 +92,20 @@ export async function GET(request: NextRequest) {
     ])
 
     const ridesWithAvailableSeats = rides.map(ride => {
-      const bookedSeats = ride.bookings.reduce((sum, booking) => sum + booking.seats_booked, 0)
+      const bookedSeats = ride.bookings.reduce((sum: number, booking: { seats_booked: number }) => sum + booking.seats_booked, 0)
       return {
-        ...ride,
+        id: ride.id,
+        driver_id: ride.driver_id,
+        origin: ride.origin,
+        destination: ride.destination,
+        departure_time: ride.departure_time,
         available_seats: ride.available_seats - bookedSeats,
-        bookings: undefined // Remove bookings from response
+        price_per_seat: ride.price_per_seat,
+        description: ride.description,
+        status: ride.status,
+        created_at: ride.created_at,
+        updated_at: ride.updated_at,
+        driver: ride.driver
       }
     })
 
@@ -110,7 +123,7 @@ export async function GET(request: NextRequest) {
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         { status: 400 }
       )
     }
@@ -134,17 +147,27 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '')
+    console.log('Create ride POST request received') // Debug log
     
-    if (!token) {
+    const authHeader = request.headers.get('authorization')
+    console.log('Auth header present:', !!authHeader) // Debug log
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('No valid authorization header')
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       )
     }
 
+    const token = authHeader.replace('Bearer ', '')
+    console.log('Token extracted, length:', token.length) // Debug log
+
     const decoded = verifyJWT(token)
-    if (!decoded?.userId) {
+    console.log('Token decoded:', !!decoded, decoded?.userId) // Debug log
+    
+    if (!decoded || !decoded.userId) {
+      console.log('Token verification failed')
       return NextResponse.json(
         { error: 'Invalid token' },
         { status: 401 }
@@ -152,7 +175,10 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+    console.log('Request body received:', Object.keys(body)) // Debug log
+    
     const rideData = createRideSchema.parse(body)
+    console.log('Data validated successfully') // Debug log
 
     const ride = await prisma.ride.create({
       data: {
@@ -162,7 +188,8 @@ export async function POST(request: NextRequest) {
         departure_time: new Date(rideData.departure_time),
         available_seats: rideData.available_seats,
         price_per_seat: rideData.price_per_seat,
-        description: rideData.description
+        description: rideData.description,
+        status: 'ACTIVE' // Add default status
       },
       include: {
         driver: {
@@ -178,6 +205,8 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    console.log('Ride created successfully:', ride.id) // Debug log
+
     return NextResponse.json({
       message: 'Ride created successfully',
       ride
@@ -186,8 +215,9 @@ export async function POST(request: NextRequest) {
     console.error('Error creating ride:', error)
     
     if (error instanceof z.ZodError) {
+      console.error('Validation error details:', error.issues)
       return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         { status: 400 }
       )
     }
@@ -200,10 +230,18 @@ export async function POST(request: NextRequest) {
           { status: 503 }
         )
       }
+      
+      // Handle Prisma constraint errors
+      if (error.message.includes('Unique constraint')) {
+        return NextResponse.json(
+          { error: 'A ride with similar details already exists' },
+          { status: 409 }
+        )
+      }
     }
 
     return NextResponse.json(
-      { error: 'Failed to create ride' },
+      { error: 'Failed to create ride', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }

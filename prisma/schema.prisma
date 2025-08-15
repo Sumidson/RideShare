@@ -62,6 +62,7 @@ model Ride {
   // Relations
   driver      User      @relation("DriverRides", fields: [driver_id], references: [id], onDelete: Cascade)
   bookings    Booking[]
+  reviews     Review[]
   
   @@map("rides")
 }
@@ -95,6 +96,7 @@ model Review {
   // Relations
   reviewer    User     @relation("Reviewer", fields: [reviewer_id], references: [id], onDelete: Cascade)
   reviewed_user User   @relation("ReviewedUser", fields: [reviewed_user_id], references: [id], onDelete: Cascade)
+  ride        Ride     @relation(fields: [ride_id], references: [id], onDelete: Cascade)
   
   @@map("reviews")
 }

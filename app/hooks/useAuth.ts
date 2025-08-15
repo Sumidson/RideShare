@@ -4,6 +4,22 @@ import { useState, useEffect } from 'react'
 import { User } from '@/app/types/auth'
 import { apiClient } from '@/app/lib/api'
 
+// Define interfaces for better type safety
+interface SignUpMetadata {
+  username?: string
+  full_name?: string
+  [key: string]: string | undefined
+}
+
+interface AuthResponse {
+  data: any
+  error: string | null
+}
+
+interface AuthError {
+  message: string
+}
+
 const LOCAL_STORAGE_TOKEN_KEY = 'carpooling_jwt'
 
 export const useAuth = () => {
@@ -24,8 +40,9 @@ export const useAuth = () => {
             setUser(data.user as User)
           }
         }
-      } catch (err: any) {
-        setError(err.message)
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred'
+        setError(errorMessage)
       } finally {
         setLoading(false)
       }
@@ -33,7 +50,7 @@ export const useAuth = () => {
     initialize()
   }, [])
 
-  const signUp = async (email: string, password: string, metadata?: any) => {
+  const signUp = async (email: string, password: string, metadata?: SignUpMetadata): Promise<AuthResponse> => {
     try {
       setLoading(true)
       setError(null)
@@ -47,7 +64,7 @@ export const useAuth = () => {
     }
   }
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string): Promise<AuthResponse> => {
     try {
       setLoading(true)
       setError(null)
@@ -86,7 +103,7 @@ export const useAuth = () => {
     }
   }
 
-  const resetPassword = async (_email: string) => {
+  const resetPassword = async (_email: string): Promise<{ error: string }> => {
     return { error: 'Password reset is not available.' }
   }
 

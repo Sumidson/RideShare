@@ -36,16 +36,16 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12)
 
-    // Create user with type assertion
+    // Create user
     const user = await prisma.user.create({
       data: {
         email,
-        username,
-        full_name,
+        ...(username && { username }),
+        ...(full_name && { full_name }),
         password: hashedPassword,
         email_verified: false,
         is_verified: false
-      } as any
+      }
     })
 
     // Create JWT token
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Return user data (without password) and token
-    const { password: _, ...userWithoutPassword } = user as any
+    const { password: _, ...userWithoutPassword } = user
 
     return NextResponse.json({ 
       message: 'User created successfully',
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation error', details: (error as z.ZodError).errors },
+        { error: 'Validation error', details: error.issues },
         { status: 400 }
       )
     }

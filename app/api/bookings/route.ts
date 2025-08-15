@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 import { verifyJWT } from '@/app/lib/auth'
 import { z } from 'zod'
+import { Prisma, BookingStatus } from '@prisma/client'
 
 const createBookingSchema = z.object({
   ride_id: z.string().uuid(),
@@ -140,7 +141,7 @@ export async function POST(request: NextRequest) {
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         { status: 400 }
       )
     }
@@ -177,12 +178,12 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10')
     const skip = (page - 1) * limit
 
-    const where: any = {
+    const where: Prisma.BookingWhereInput = {
       passenger_id: decoded.userId
     }
 
-    if (status) {
-      where.status = status
+    if (status && Object.values(BookingStatus).includes(status as BookingStatus)) {
+      where.status = status as BookingStatus
     }
 
     const [bookings, total] = await Promise.all([

@@ -46,7 +46,8 @@ export async function POST(request: NextRequest) {
       include: {
         bookings: {
           where: {
-            passenger_id: decoded.userId
+            passenger_id: decoded.userId,
+            status: 'CONFIRMED'
           }
         }
       }
@@ -120,12 +121,14 @@ export async function POST(request: NextRequest) {
       select: { rating: true }
     })
 
-    const averageRating = userReviews.reduce((sum, r) => sum + r.rating, 0) / userReviews.length
+    if (userReviews.length > 0) {
+      const averageRating = userReviews.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) / userReviews.length
 
-    await prisma.user.update({
-      where: { id: reviewData.reviewed_user_id },
-      data: { rating: averageRating }
-    })
+      await prisma.user.update({
+        where: { id: reviewData.reviewed_user_id },
+        data: { rating: Math.round(averageRating * 100) / 100 }
+      })
+    }
 
     return NextResponse.json({
       message: 'Review created successfully',
@@ -136,7 +139,7 @@ export async function POST(request: NextRequest) {
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         { status: 400 }
       )
     }

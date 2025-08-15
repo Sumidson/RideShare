@@ -116,14 +116,15 @@ export async function PUT(
     const body = await request.json()
     const updateData = updateRideSchema.parse(body)
 
-    // Convert departure_time string to Date if provided
+    // Convert departure_time string to Date for database if provided
+    const dataForUpdate = { ...updateData }
     if (updateData.departure_time) {
-      updateData.departure_time = new Date(updateData.departure_time)
+      dataForUpdate.departure_time = new Date(updateData.departure_time)
     }
 
     const ride = await prisma.ride.update({
       where: { id: params.id },
-      data: updateData,
+      data: dataForUpdate,
       include: {
         driver: {
           select: {
@@ -147,7 +148,7 @@ export async function PUT(
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         { status: 400 }
       )
     }

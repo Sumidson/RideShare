@@ -1,70 +1,77 @@
-import { prisma } from './prisma'
-import { supabaseAdmin } from './supabase/admin'
 import jwt from 'jsonwebtoken'
-import bcrypt from 'bcryptjs'
+import { PrismaClient } from '@prisma/client'
+import { User } from '@supabase/supabase-js'
 
-export const hashPassword = async (password: string): Promise<string> => {
-  return bcrypt.hash(password, 12)
+const prisma = new PrismaClient()
+
+// Define interface for JWT payload
+interface JWTPayload {
+  userId: string
+  email: string
+  [key: string]: string | number | boolean | undefined
 }
 
-export const verifyPassword = async (password: string, hashedPassword: string): Promise<boolean> => {
-  return bcrypt.compare(password, hashedPassword)
-}
-
-export const generateJWT = (payload: any): string => {
-  return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: '7d' })
-}
-
-export const verifyJWT = (token: string): any => {
+export function verifyJWT(token: string): JWTPayload | null {
   try {
-    return jwt.verify(token, process.env.JWT_SECRET!)
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET is not defined')
+    }
+    
+    const decoded = jwt.verify(token, process.env.JWT_SECRET) as JWTPayload
+    console.log('JWT decoded successfully:', decoded) // Debug log
+    
+    return decoded
   } catch (error) {
+    console.error('JWT verification failed:', error)
     return null
   }
 }
 
-export const createUserSession = async (userId: string) => {
-  const token = generateJWT({ userId })
-  const expiresAt = new Date()
-  expiresAt.setDate(expiresAt.getDate() + 7) // 7 days
-
-  const session = await prisma.session.create({
-    data: {
-      user_id: userId,
-      token,
-      expires_at: expiresAt
-    }
+export function signJWT(payload: JWTPayload): string {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is not defined')
+  }
+  
+  return jwt.sign(payload, process.env.JWT_SECRET, { 
+    expiresIn: '7d' 
   })
-
-  return session
 }
 
-export const syncUserWithSupabase = async (user: any) => {
+export async function syncUserWithSupabase(supabaseUser: User) {
   try {
-    // Create or update user in Prisma
-    const dbUser = await prisma.user.upsert({
-      where: { id: user.id },
-      update: {
-        email: user.email,
-        username: user.user_metadata?.username,
-        full_name: user.user_metadata?.full_name,
-        avatar_url: user.user_metadata?.avatar_url,
-        email_verified: user.email_confirmed_at ? true : false,
-        updated_at: new Date()
-      },
-      create: {
-        id: user.id,
-        email: user.email,
-        username: user.user_metadata?.username,
-        full_name: user.user_metadata?.full_name,
-        avatar_url: user.user_metadata?.avatar_url,
-        email_verified: user.email_confirmed_at ? true : false
-      }
+    // Check if user already exists in local database
+    const existingUser = await prisma.user.findUnique({
+      where: { id: supabaseUser.id }
     })
 
-    return dbUser
+    if (existingUser) {
+      // Update existing user with latest Supabase data
+      return await prisma.user.update({
+        where: { id: supabaseUser.id },
+        data: {
+          email: supabaseUser.email || existingUser.email,
+          full_name: supabaseUser.user_metadata?.full_name || existingUser.full_name,
+          avatar_url: supabaseUser.user_metadata?.avatar_url || existingUser.avatar_url,
+          email_verified: supabaseUser.email_confirmed_at ? true : false,
+          updated_at: new Date()
+        }
+      })
+    } else {
+      // Create new user in local database
+      return await prisma.user.create({
+        data: {
+          id: supabaseUser.id,
+          email: supabaseUser.email!,
+          full_name: supabaseUser.user_metadata?.full_name || null,
+          avatar_url: supabaseUser.user_metadata?.avatar_url || null,
+          email_verified: supabaseUser.email_confirmed_at ? true : false,
+          username: supabaseUser.user_metadata?.username || null,
+          phone: supabaseUser.user_metadata?.phone || null
+        }
+      })
+    }
   } catch (error) {
-    console.error('Error syncing user:', error)
+    console.error('Error syncing user with Supabase:', error)
     throw error
   }
 }
