@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/app/lib/prisma'
-import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
+import { supabase } from '@/lib/supabase'
 import { z } from 'zod'
 
 const signUpSchema = z.object({
@@ -16,61 +14,29 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { email, password, username, full_name } = signUpSchema.parse(body)
 
-    // Check if user already exists
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { email },
-          ...(username ? [{ username }] : [])
-        ]
+    // Sign up user with Supabase
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          username,
+          full_name
+        }
       }
     })
 
-    if (existingUser) {
+    if (error) {
       return NextResponse.json(
-        { error: 'User with this email or username already exists' },
+        { error: error.message },
         { status: 400 }
       )
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12)
-
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        email,
-        ...(username && { username }),
-        ...(full_name && { full_name }),
-        password: hashedPassword,
-        email_verified: false,
-        is_verified: false
-      }
-    })
-
-    // Create JWT token
-    const token = jwt.sign(
-      { userId: user.id, email: user.email },
-      process.env.JWT_SECRET || 'fallback-secret',
-      { expiresIn: '7d' }
-    )
-
-    // Create session
-    await prisma.session.create({
-      data: {
-        user_id: user.id,
-        token,
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
-      }
-    })
-
-    // Return user data (without password) and token
-    const { password: _, ...userWithoutPassword } = user
-
     return NextResponse.json({ 
-      message: 'User created successfully',
-      user: userWithoutPassword,
-      token
+      message: 'User created successfully. Please check your email to verify your account.',
+      user: data.user,
+      session: data.session
     })
   } catch (error: unknown) {
     console.error('Signup error:', error)

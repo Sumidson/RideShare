@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/app/lib/prisma'
-import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
+import { supabase } from '@/lib/supabase'
 import { z } from 'zod'
 
 const loginSchema = z.object({
@@ -11,61 +9,26 @@ const loginSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    // Connect to the database first to ensure connection
-    await prisma.$connect()
-    
     const body = await request.json()
     const { email, password } = loginSchema.parse(body)
 
-    // Find user by email
-    const user = await prisma.user.findUnique({
-      where: { email }
+    // Sign in user with Supabase
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
     })
 
-    if (!user || !user.password) {
+    if (error) {
       return NextResponse.json(
-        { error: 'Invalid email or password' },
+        { error: error.message },
         { status: 401 }
       )
     }
-
-    // Check password
-    const isPasswordValid = await bcrypt.compare(password, user.password)
-    if (!isPasswordValid) {
-      return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      )
-    }
-
-    // Create JWT token
-    const token = jwt.sign(
-      { userId: user.id, email: user.email },
-      process.env.JWT_SECRET || 'fallback-secret',
-      { expiresIn: '7d' }
-    )
-
-    // Create or update session
-    await prisma.session.upsert({
-      where: { id: user.id },
-      update: {
-        token,
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-      },
-      create: {
-        user_id: user.id,
-        token,
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-      }
-    })
-
-    // Return user data (without password) and token
-    const { password: _, ...userWithoutPassword } = user
 
     return NextResponse.json({ 
       message: 'Login successful',
-      user: userWithoutPassword,
-      token
+      user: data.user,
+      session: data.session
     })
   } catch (error: unknown) {
     console.error('Login error:', error)
@@ -77,7 +40,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // More detailed error message for debugging
     const errorMessage = error instanceof Error ? error.message : 'An internal server error occurred';
     console.error('Detailed error:', errorMessage);
 
@@ -85,7 +47,5 @@ export async function POST(request: NextRequest) {
       { error: 'An internal server error occurred', details: errorMessage },
       { status: 500 }
     )
-  } finally {
-    await prisma.$disconnect()
   }
 }

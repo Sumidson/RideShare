@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-// import { supabase } from '@/lib/supabase'
-// import { signInWithGoogle } from '@/lib/auth'
+import { supabase } from '@/lib/supabase'
+import { signInWithGoogle } from '@/lib/auth'
 import { useRouter } from 'next/navigation'
 
 export default function SignIn() {
@@ -15,7 +15,7 @@ export default function SignIn() {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         setUser(user)
-        router.push('/dashboard')
+        router.push('/rides')
       }
     }
     getUser()
