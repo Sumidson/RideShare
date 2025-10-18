@@ -10,7 +10,10 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "heroku-postbuild": "prisma generate && npm run build",
+    "docker:build": "docker build -t rideshare .",
+    "docker:run": "docker run -p 3000:3000 rideshare"
   },
   "dependencies": {
     "@prisma/client": "^6.14.0",

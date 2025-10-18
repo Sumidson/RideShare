@@ -1,0 +1,6 @@
+[build]
+  [[build.buildpacks]]
+    uri = "gcr.io/buildpacks/nodejs"
+
+[run]
+  image = "gcr.io/buildpacks/nodejs"
