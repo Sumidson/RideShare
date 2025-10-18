@@ -16,11 +16,12 @@ const updateRideSchema = z.object({
 // GET function is unchanged, it's correct for a public endpoint.
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const ride = await prisma.ride.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         driver: {
           select: {
@@ -56,7 +57,7 @@ export async function GET(
     }
 
     // Calculate available seats
-    const bookedSeats = ride.bookings.reduce((sum: number, booking: any) => sum + booking.seats_booked, 0)
+    const bookedSeats = ride.bookings.reduce((sum: number, booking: { seats_booked: number }) => sum + booking.seats_booked, 0)
     const availableSeats = ride.available_seats - bookedSeats
 
     return NextResponse.json({
@@ -75,9 +76,10 @@ export async function GET(
 // --- UPDATED PUT FUNCTION ---
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
 
     if (!token) {
@@ -110,7 +112,7 @@ export async function PUT(
 
     // Check if user owns the ride
     const existingRide = await prisma.ride.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       select: { driver_id: true }
     })
 
@@ -132,13 +134,13 @@ export async function PUT(
     const updateData = updateRideSchema.parse(body)
 
     // Convert departure_time string to Date for database if provided
-    const dataForUpdate: any = { ...updateData }
+    const dataForUpdate: Record<string, unknown> = { ...updateData }
     if (updateData.departure_time) {
       dataForUpdate.departure_time = new Date(updateData.departure_time)
     }
 
     const ride = await prisma.ride.update({
-      where: { id: params.id },
+      where: { id: id },
       data: dataForUpdate,
       include: {
         driver: {
@@ -178,9 +180,10 @@ export async function PUT(
 // --- UPDATED DELETE FUNCTION ---
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
 
     if (!token) {
@@ -213,7 +216,7 @@ export async function DELETE(
 
     // Check if user owns the ride
     const existingRide = await prisma.ride.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       select: { driver_id: true, bookings: { where: { status: 'CONFIRMED' }, select: { id: true } } }
     })
 
@@ -240,7 +243,7 @@ export async function DELETE(
     }
 
     await prisma.ride.delete({
-      where: { id: params.id }
+      where: { id: id }
     })
 
     return NextResponse.json({

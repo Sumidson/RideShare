@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  User,
   Clock,
   Calendar,
   Mail,
@@ -17,7 +16,8 @@ import {
   TrendingUp,
   Activity,
   Lock,
-  MessageCircle
+  MessageCircle,
+  User
 } from 'lucide-react';
 import { useSupabaseAuth } from '@/app/providers/SupabaseAuthProvider';
 import { apiClient } from '@/app/lib/api';
@@ -160,7 +160,7 @@ const ProfilePage = () => {
                     animate={{ scale: 1 }}
                     transition={{ duration: 0.5, type: 'spring' }}
                   >
-                    {user.full_name?.[0] || user.username?.[0] || user.email[0].toUpperCase()}
+                    {(user.user_metadata?.full_name || user.user_metadata?.username || user.email)?.[0]?.toUpperCase()}
                   </motion.div>
                   <motion.button
                     whileHover={{ scale: 1.1 }}
@@ -172,7 +172,7 @@ const ProfilePage = () => {
                 </div>
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900 mb-1">
-                    {user.full_name || user.username || 'User'}
+                    {user.user_metadata?.full_name || user.user_metadata?.username || 'User'}
                   </h1>
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-gray-600 mb-2">
                     <div className="flex items-center space-x-1">
@@ -294,7 +294,7 @@ const ProfilePage = () => {
                     <div className="space-y-4">
                       <div>
                         <label className="text-sm font-medium text-gray-600">Full Name</label>
-                        <p className="text-gray-900">{user.full_name || 'Not provided'}</p>
+                        <p className="text-gray-900">{user.user_metadata?.full_name || 'Not provided'}</p>
                       </div>
                       <div>
                         <label className="text-sm font-medium text-gray-600">Email</label>
@@ -302,7 +302,7 @@ const ProfilePage = () => {
                       </div>
                       <div>
                         <label className="text-sm font-medium text-gray-600">Username</label>
-                        <p className="text-gray-900">{user.username || 'Not provided'}</p>
+                        <p className="text-gray-900">{user.user_metadata?.username || 'Not provided'}</p>
                       </div>
                     </div>
                   </motion.div>
@@ -314,7 +314,7 @@ const ProfilePage = () => {
                     <div className="space-y-4">
                       <div>
                         <label className="text-sm font-medium text-gray-600">Email Verified</label>
-                        <p className="text-gray-900">{user.email_verified ? 'Yes' : 'No'}</p>
+                        <p className="text-gray-900">{user.email_confirmed_at ? 'Yes' : 'No'}</p>
                       </div>
                       <div>
                         <label className="text-sm font-medium text-gray-600">Member Since</label>

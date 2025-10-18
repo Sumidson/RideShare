@@ -1,6 +1,6 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'
 
-interface ApiResponse<T = any> {
+interface ApiResponse<T = unknown> {
   data?: T
   error?: string
   message?: string
@@ -23,9 +23,23 @@ class ApiClient {
   ): Promise<ApiResponse<T>> {
     const url = `${API_BASE_URL}${endpoint}`
     
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-      ...options.headers
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    }
+
+    // Add any additional headers from options
+    if (options.headers) {
+      if (options.headers instanceof Headers) {
+        options.headers.forEach((value, key) => {
+          headers[key] = value
+        })
+      } else if (Array.isArray(options.headers)) {
+        options.headers.forEach(([key, value]) => {
+          headers[key] = value
+        })
+      } else {
+        Object.assign(headers, options.headers)
+      }
     }
 
     if (this.token) {
@@ -45,7 +59,7 @@ class ApiClient {
       }
 
       return { data }
-    } catch (error) {
+    } catch {
       return { error: 'Network error' }
     }
   }

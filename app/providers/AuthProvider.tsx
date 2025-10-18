@@ -9,10 +9,10 @@ interface AuthContextType {
   user: User | null
   loading: boolean
   error: string | null
-  signUp: (email: string, password: string, metadata?: any) => Promise<any>
-  signIn: (email: string, password: string) => Promise<any>
+  signUp: (email: string, password: string, metadata?: { username?: string; full_name?: string; [key: string]: string | undefined }) => Promise<{ data: { user?: User; session?: unknown } | null; error: string | null }>
+  signIn: (email: string, password: string) => Promise<{ data: { user?: User; session?: unknown } | null; error: string | null }>
   signOut: () => Promise<void>
-  resetPassword: (email: string) => Promise<any>
+  resetPassword: () => Promise<{ error: string }>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)

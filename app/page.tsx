@@ -1,8 +1,7 @@
 "use client";
-import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Smartphone, Users, CheckCircle, Download, MapPin, Plus, Star, ArrowRight, X, DollarSign, AlertTriangle, Shield, Phone, Clock, Activity, Calculator } from 'lucide-react';
-import Navbar from '@/components/Navbar';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Users, CheckCircle, Download, MapPin, Plus, Star, ArrowRight, X, DollarSign, AlertTriangle, Shield, Phone, Calculator } from 'lucide-react';
 
 // Enhanced motion variants
 const sectionVariants = {
@@ -41,26 +40,9 @@ const cardVariants = {
   }
 };
 
-// Enhanced FadeIn component with Framer Motion
-const FadeIn = ({ children, className, delay = 0, ...props }) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.3 }}
-      transition={{ delay: delay * 0.1, duration: 0.6, ease: "easeOut" }}
-      className={className}
-      {...props}
-    >
-      {children}
-    </motion.div>
-  );
-};
-
 // Professional Cost Calculator Component with animations
 const CostCalculator = () => {
   const [distance, setDistance] = useState(10);
-  const [isHovered, setIsHovered] = useState(false);
   const rideShareCost = distance * 3;
   const gooberCost = distance * 5.5;
   const lolaCost = distance * 4.8;
@@ -73,8 +55,8 @@ const CostCalculator = () => {
     >
       <motion.div 
         className={`bg-white rounded-3xl p-6 lg:p-8 shadow-xl border border-slate-200 transition-all duration-500 w-full`}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        onMouseEnter={() => {}}
+        onMouseLeave={() => {}}
         whileHover={{ scale: 1.02, boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)" }}
         transition={{ duration: 0.3 }}
       >
@@ -187,7 +169,7 @@ const CostCalculator = () => {
               You save ${Math.round(((gooberCost + lolaCost + taxiCost) / 3) - rideShareCost)} on this trip!
             </motion.p>
             <p className="text-sm text-slate-700">
-              That's {Math.round((1 - (rideShareCost / ((gooberCost + lolaCost + taxiCost) / 3))) * 100)}% less than competitors
+              That&apos;s {Math.round((1 - (rideShareCost / ((gooberCost + lolaCost + taxiCost) / 3))) * 100)}% less than competitors
             </p>
           </motion.div>
           
@@ -435,7 +417,7 @@ const ElegantRideshareLanding = () => {
               className="text-xl text-slate-600 font-light"
               variants={itemVariants}
             >
-              See what's happening right now in your community
+              See what&apos;s happening right now in your community
             </motion.p>
           </motion.div>
           
@@ -585,7 +567,7 @@ const ElegantRideshareLanding = () => {
                   className="text-xl text-slate-600 font-light leading-relaxed"
                   variants={itemVariants}
                 >
-                  We've built comprehensive safety measures to ensure every ride is secure, reliable, and worry-free.
+                  We&apos;ve built comprehensive safety measures to ensure every ride is secure, reliable, and worry-free.
                 </motion.p>
               </motion.div>
               
@@ -702,7 +684,7 @@ const ElegantRideshareLanding = () => {
               className="text-xl text-slate-600 font-light max-w-3xl mx-auto"
               variants={itemVariants}
             >
-              Don't settle for expensive rides or unreliable service. See how we compare to other platforms.
+              Don&apos;t settle for expensive rides or unreliable service. See how we compare to other platforms.
             </motion.p>
           </motion.div>
 
@@ -975,7 +957,7 @@ const ElegantRideshareLanding = () => {
               className="text-xl text-slate-300 font-light max-w-2xl mx-auto"
               variants={itemVariants}
             >
-              Download our app and join thousands who've already transformed their daily journey.
+              Download our app and join thousands who&apos;ve already transformed their daily journey.
             </motion.p>
             
             <motion.div 

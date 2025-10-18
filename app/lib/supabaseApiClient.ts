@@ -2,7 +2,7 @@ import { supabase } from '@/lib/supabase'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'
 
-interface ApiResponse<T = any> {
+interface ApiResponse<T = unknown> {
   data?: T
   error?: string
   message?: string
@@ -39,7 +39,7 @@ class SupabaseApiClient {
       }
 
       return { data }
-    } catch (error) {
+    } catch {
       return { error: 'Network error' }
     }
   }

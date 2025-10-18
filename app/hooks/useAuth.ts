@@ -11,14 +11,16 @@ interface SignUpMetadata {
   [key: string]: string | undefined
 }
 
+interface ApiLoginResponse {
+  token?: string
+  user?: User
+}
+
 interface AuthResponse {
-  data: any
+  data: { user?: User; session?: unknown } | null
   error: string | null
 }
 
-interface AuthError {
-  message: string
-}
 
 const LOCAL_STORAGE_TOKEN_KEY = 'carpooling_jwt'
 
@@ -36,8 +38,8 @@ export const useAuth = () => {
           const { data, error } = await apiClient.getProfile()
           if (error) {
             setError(error)
-          } else if (data?.user) {
-            setUser(data.user as User)
+          } else if (data) {
+            setUser(data as User)
           }
         }
       } catch (err: unknown) {
@@ -55,10 +57,11 @@ export const useAuth = () => {
       setLoading(true)
       setError(null)
       const { data, error } = await apiClient.signup(email, password, metadata?.username, metadata?.full_name)
-      return { data, error: error ?? null }
-    } catch (err: any) {
-      setError(err.message)
-      return { data: null, error: err.message }
+      return { data: data as { user?: User; session?: unknown } | null, error: error ?? null }
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred'
+      setError(errorMessage)
+      return { data: null, error: errorMessage }
     } finally {
       setLoading(false)
     }
@@ -73,19 +76,20 @@ export const useAuth = () => {
         setError(error)
         return { data: null, error }
       }
-      if (data?.token) {
-        apiClient.setToken(data.token)
+      if ((data as ApiLoginResponse)?.token) {
+        apiClient.setToken((data as ApiLoginResponse).token!)
         if (typeof window !== 'undefined') {
-          localStorage.setItem(LOCAL_STORAGE_TOKEN_KEY, data.token)
+          localStorage.setItem(LOCAL_STORAGE_TOKEN_KEY, (data as ApiLoginResponse).token!)
         }
       }
-      if (data?.user) {
-        setUser(data.user as User)
+      if ((data as ApiLoginResponse)?.user) {
+        setUser((data as ApiLoginResponse).user!)
       }
-      return { data, error: null }
-    } catch (err: any) {
-      setError(err.message)
-      return { data: null, error: err.message }
+      return { data: data as { user?: User; session?: unknown } | null, error: null }
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred'
+      setError(errorMessage)
+      return { data: null, error: errorMessage }
     } finally {
       setLoading(false)
     }
@@ -98,12 +102,13 @@ export const useAuth = () => {
         localStorage.removeItem(LOCAL_STORAGE_TOKEN_KEY)
       }
       setUser(null)
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred'
+      setError(errorMessage)
     }
   }
 
-  const resetPassword = async (_email: string): Promise<{ error: string }> => {
+  const resetPassword = async (): Promise<{ error: string }> => {
     return { error: 'Password reset is not available.' }
   }
 

@@ -17,6 +17,7 @@
     "@supabase/auth-helpers-nextjs": "^0.8.7",
     "@supabase/supabase-js": "^2.38.5",
     "bcryptjs": "^3.0.2",
+    "bufferutil": "^4.0.9",
     "framer-motion": "^12.15.0",
     "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.2",
@@ -25,6 +26,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwind": "^2.3.1",
+    "utf-8-validate": "^6.0.5",
     "zod": "^4.0.17"
   },
   "devDependencies": {

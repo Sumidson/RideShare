@@ -42,7 +42,7 @@ export default function BookingDetailsPage() {
         } else {
           setRide(data as Ride)
         }
-      } catch (err) {
+      } catch {
         setError('Failed to fetch ride details')
       } finally {
         setRideLoading(false)

@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 
 export default function SignIn() {
   const [loading, setLoading] = useState(false)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null)
   const router = useRouter()
 
   useEffect(() => {

@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, User, MessageCircle, Plus, ArrowLeft, Send } from 'lucide-react';
 import { useSupabaseAuth } from '@/app/providers/SupabaseAuthProvider';
@@ -42,13 +42,7 @@ const ReviewsPage = () => {
   });
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      fetchReviews();
-    }
-  }, [user]);
-
-  const fetchReviews = async () => {
+  const fetchReviews = useCallback(async () => {
     try {
       const { data, error } = await apiClient.getReviews(user!.id);
       if (error) {
@@ -56,12 +50,18 @@ const ReviewsPage = () => {
       } else {
         setReviews((data as { reviews: Review[] })?.reviews || []);
       }
-    } catch (err) {
+    } catch {
       setError('Failed to fetch reviews');
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchReviews();
+    }
+  }, [user, fetchReviews]);
 
   const handleCreateReview = async () => {
     if (!createFormData.reviewed_user_id || !createFormData.ride_id) {
@@ -86,7 +86,7 @@ const ReviewsPage = () => {
         });
         fetchReviews(); // Refresh reviews
       }
-    } catch (err) {
+    } catch {
       setError('Failed to create review');
     } finally {
       setSubmitting(false);
@@ -270,7 +270,7 @@ const ReviewsPage = () => {
             <div className="p-6 border-b border-gray-200">
               <h2 className="text-xl font-bold text-gray-900 flex items-center space-x-2">
                 <User className="h-5 w-5 text-purple-600" />
-                <span>Reviews for {user.full_name || user.username || 'You'}</span>
+                <span>Reviews for {user.user_metadata?.full_name || user.user_metadata?.username || 'You'}</span>
               </h2>
               <p className="text-gray-600 mt-1">
                 {reviews.length} review{reviews.length !== 1 ? 's' : ''}

@@ -1,6 +1,5 @@
 import LoginForm from '@/components/auth/LoginForm'
 import AuthGuard from '@/components/auth/AuthGuard'
-import Link from 'next/link'
 
 export default function LoginPage() {
   return (

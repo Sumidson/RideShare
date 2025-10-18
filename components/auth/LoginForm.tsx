@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useSupabaseAuth } from '../../app/providers/SupabaseAuthProvider'
+import { supabase } from '@/lib/supabase'
 
 export default function LoginForm() {
   const [email, setEmail] = useState('')
@@ -10,7 +10,6 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
-  // Using Supabase directly for sign in
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -18,10 +17,13 @@ export default function LoginForm() {
     setLoading(true)
     setError(null)
 
-    const { error } = await signIn(email, password)
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    })
     
     if (error) {
-      setError(error)
+      setError(error.message)
     } else {
       router.push('/')
     }

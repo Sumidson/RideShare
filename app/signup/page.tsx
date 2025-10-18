@@ -76,7 +76,7 @@ const SignUpPage = () => {
     setApiError(null);
     
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
@@ -91,7 +91,7 @@ const SignUpPage = () => {
       } else {
         router.push('/login');
       }
-    } catch (err) {
+    } catch {
       setApiError('An unexpected error occurred');
     } finally {
       setIsSubmitting(false);

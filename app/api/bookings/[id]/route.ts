@@ -9,9 +9,10 @@ const updateBookingSchema = z.object({
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
     
     if (!token) {
@@ -30,7 +31,7 @@ export async function GET(
     }
 
     const booking = await prisma.booking.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         ride: {
           include: {
@@ -85,9 +86,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
     
     if (!token) {
@@ -106,7 +108,7 @@ export async function PUT(
     }
 
     const booking = await prisma.booking.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         ride: {
           select: {
@@ -115,7 +117,7 @@ export async function PUT(
             bookings: {
               where: {
                 status: 'CONFIRMED',
-                id: { not: params.id }
+                id: { not: id }
               },
               select: {
                 seats_booked: true
@@ -158,7 +160,7 @@ export async function PUT(
     }
 
     const updatedBooking = await prisma.booking.update({
-      where: { id: params.id },
+      where: { id: id },
       data: { status: updateData.status },
       include: {
         ride: {
@@ -194,7 +196,7 @@ export async function PUT(
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         { status: 400 }
       )
     }
@@ -208,9 +210,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
     
     if (!token) {
@@ -229,7 +232,7 @@ export async function DELETE(
     }
 
     const booking = await prisma.booking.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       select: {
         passenger_id: true,
         status: true
@@ -260,7 +263,7 @@ export async function DELETE(
     }
 
     await prisma.booking.delete({
-      where: { id: params.id }
+      where: { id: id }
     })
 
     return NextResponse.json({

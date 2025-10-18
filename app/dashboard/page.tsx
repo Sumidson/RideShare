@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
 export default function Dashboard() {
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<{ id: string; email?: string; full_name?: string } | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
@@ -53,7 +53,7 @@ export default function Dashboard() {
               </h1>
               <div className="mb-4">
                 <p className="text-gray-600">
-                  Hello, {user.user_metadata?.full_name || user.email}!
+                  Hello, {user.full_name || user.email}!
                 </p>
                 <p className="text-sm text-gray-500">
                   Email: {user.email}

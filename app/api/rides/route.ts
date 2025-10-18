@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const destination = searchParams.get('destination')
     const date = searchParams.get('date')
 
-    let whereClause: any = {
+    const whereClause: Record<string, unknown> = {
       status: 'ACTIVE',
       available_seats: {
         gt: 0

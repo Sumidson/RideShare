@@ -6,7 +6,7 @@ import { useSupabaseAuth } from '@/app/providers/SupabaseAuthProvider'
 import { useRouter } from 'next/navigation'
 
 export default function Dashboard() {
-  type DashboardUser = { id: string; email: string; full_name?: string }
+  type DashboardUser = { id: string; email?: string; full_name?: string }
   const [user, setUser] = useState<DashboardUser | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()

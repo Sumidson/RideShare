@@ -3,6 +3,7 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import Image from 'next/image'
 
 export default function GoogleSignInButton() {
   const [loading, setLoading] = useState(false)
@@ -35,7 +36,7 @@ export default function GoogleSignInButton() {
       disabled={loading}
       className="px-4 py-2 border flex gap-2 border-slate-200 rounded-lg text-slate-700 hover:border-slate-400 hover:text-slate-900 hover:shadow transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
     >
-      <img className="w-6 h-6" src="https://www.svgrepo.com/show/475656/google-color.svg" loading="lazy" alt="google logo" />
+      <Image className="w-6 h-6" src="https://www.svgrepo.com/show/475656/google-color.svg" width={24} height={24} alt="google logo" />
       <span>{loading ? 'Signing in...' : 'Login with Google'}</span>
     </button>
   )

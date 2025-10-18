@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useSupabaseAuth } from '../../app/providers/SupabaseAuthProvider'
+import { supabase } from '@/lib/supabase'
 
 export default function RegisterForm() {
   const [formData, setFormData] = useState({
@@ -30,17 +30,19 @@ export default function RegisterForm() {
     setLoading(true)
     setError(null)
 
-    const { error } = await signUp(
-      formData.email,
-      formData.password,
-      {
-        username: formData.username,
-        full_name: formData.full_name
+    const { error } = await supabase.auth.signUp({
+      email: formData.email,
+      password: formData.password,
+      options: {
+        data: {
+          username: formData.username,
+          full_name: formData.full_name
+        }
       }
-    )
+    })
     
     if (error) {
-      setError(error)
+      setError(error.message)
     } else {
       setSuccess(true)
       setTimeout(() => router.push('/login'), 2000)
