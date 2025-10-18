@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, User, MessageCircle, Plus, ArrowLeft, Send } from 'lucide-react';
-import { useAuthContext } from '@/app/providers/AuthProvider';
+import { useSupabaseAuth } from '@/app/providers/SupabaseAuthProvider';
 import { apiClient } from '@/app/lib/api';
 import AuthGuard from '@/components/auth/AuthGuard';
 import { useRouter } from 'next/navigation';
@@ -29,7 +29,7 @@ interface CreateReviewData {
 
 const ReviewsPage = () => {
   const router = useRouter();
-  const { user } = useAuthContext();
+  const { user } = useSupabaseAuth();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

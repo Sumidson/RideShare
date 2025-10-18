@@ -1,18 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
-import { verifyJWT } from '@/app/lib/auth'
 import { z } from 'zod'
+import { createClient } from '@supabase/supabase-js' // Added Supabase client
 
 const updateRideSchema = z.object({
   origin: z.string().min(1).optional(),
   destination: z.string().min(1).optional(),
-  departure_time: z.string().datetime().optional(),
-  available_seats: z.number().min(1).max(8).optional(),
+  departure_time: z.string().optional(),
+  available_seats: z.number().min(0).max(8).optional(), // Changed min to 0 to allow setting seats to 0
   price_per_seat: z.number().min(0).optional(),
   description: z.string().optional(),
   status: z.enum(['ACTIVE', 'CANCELLED', 'COMPLETED', 'IN_PROGRESS']).optional()
 })
 
+// GET function is unchanged, it's correct for a public endpoint.
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -55,7 +56,7 @@ export async function GET(
     }
 
     // Calculate available seats
-    const bookedSeats = ride.bookings.reduce((sum, booking) => sum + booking.seats_booked, 0)
+    const bookedSeats = ride.bookings.reduce((sum: number, booking: any) => sum + booking.seats_booked, 0)
     const availableSeats = ride.available_seats - bookedSeats
 
     return NextResponse.json({
@@ -71,13 +72,14 @@ export async function GET(
   }
 }
 
+// --- UPDATED PUT FUNCTION ---
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
-    
+
     if (!token) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -85,10 +87,23 @@ export async function PUT(
       )
     }
 
-    const decoded = verifyJWT(token)
-    if (!decoded?.userId) {
+    // Authenticate with Supabase
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      }
+    );
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
       return NextResponse.json(
-        { error: 'Invalid token' },
+        { error: 'Invalid or expired token', details: authError?.message },
         { status: 401 }
       )
     }
@@ -106,7 +121,7 @@ export async function PUT(
       )
     }
 
-    if (existingRide.driver_id !== decoded.userId) {
+    if (existingRide.driver_id !== user.id) {
       return NextResponse.json(
         { error: 'Not authorized to update this ride' },
         { status: 403 }
@@ -117,7 +132,7 @@ export async function PUT(
     const updateData = updateRideSchema.parse(body)
 
     // Convert departure_time string to Date for database if provided
-    const dataForUpdate = { ...updateData }
+    const dataForUpdate: any = { ...updateData }
     if (updateData.departure_time) {
       dataForUpdate.departure_time = new Date(updateData.departure_time)
     }
@@ -145,7 +160,7 @@ export async function PUT(
     })
   } catch (error) {
     console.error('Error updating ride:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Validation error', details: error.issues },
@@ -160,13 +175,14 @@ export async function PUT(
   }
 }
 
+// --- UPDATED DELETE FUNCTION ---
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
-    
+
     if (!token) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -174,10 +190,23 @@ export async function DELETE(
       )
     }
 
-    const decoded = verifyJWT(token)
-    if (!decoded?.userId) {
+    // Authenticate with Supabase
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      }
+    );
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
       return NextResponse.json(
-        { error: 'Invalid token' },
+        { error: 'Invalid or expired token', details: authError?.message },
         { status: 401 }
       )
     }
@@ -185,7 +214,7 @@ export async function DELETE(
     // Check if user owns the ride
     const existingRide = await prisma.ride.findUnique({
       where: { id: params.id },
-      select: { driver_id: true, bookings: { select: { id: true } } }
+      select: { driver_id: true, bookings: { where: { status: 'CONFIRMED' }, select: { id: true } } }
     })
 
     if (!existingRide) {
@@ -195,7 +224,7 @@ export async function DELETE(
       )
     }
 
-    if (existingRide.driver_id !== decoded.userId) {
+    if (existingRide.driver_id !== user.id) {
       return NextResponse.json(
         { error: 'Not authorized to delete this ride' },
         { status: 403 }
@@ -203,11 +232,9 @@ export async function DELETE(
     }
 
     // Check if there are any confirmed bookings
-    const hasConfirmedBookings = existingRide.bookings.length > 0
-
-    if (hasConfirmedBookings) {
+    if (existingRide.bookings.length > 0) {
       return NextResponse.json(
-        { error: 'Cannot delete ride with confirmed bookings' },
+        { error: 'Cannot delete ride with confirmed bookings. Please cancel bookings first.' },
         { status: 400 }
       )
     }
@@ -226,4 +253,4 @@ export async function DELETE(
       { status: 500 }
     )
   }
-} 
+}

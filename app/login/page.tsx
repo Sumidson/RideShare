@@ -2,8 +2,9 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { useAuthContext } from '@/app/providers/AuthProvider';
+import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import GoogleSignInButton from '@/components/GoogleSignInButton';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -11,20 +12,29 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { signIn } = useAuthContext();
   const router = useRouter();
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setSubmitting(true);
     setError(null);
-    const { error } = await signIn(email, password);
-    if (error) {
-      setError(error);
-    } else {
-      router.push('/dasboard');
+    
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) {
+        setError(error.message);
+      } else if (data.user) {
+        router.push('/');
+      }
+    } catch (err) {
+      setError('An unexpected error occurred');
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   };
 
   return (
@@ -116,9 +126,24 @@ const LoginPage = () => {
           </motion.button>
         </form>
 
+        {/* --- Start of New Code --- */}
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center" aria-hidden="true">
+            <div className="w-full border-t border-gray-300" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="bg-white px-2 text-gray-500">OR</span>
+          </div>
+        </div>
+
+        <div className="flex justify-center">
+          <GoogleSignInButton />
+        </div>
+        {/* --- End of New Code --- */}
+
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
-            Dont have an account?{' '}
+            Don't have an account?{' '}
             <a href="/signup" className="text-blue-600 hover:text-blue-500 font-medium">
               Sign up
             </a>

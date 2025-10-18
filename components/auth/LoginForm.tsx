@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuthContext } from '../../app/providers/AuthProvider'
+import { useSupabaseAuth } from '../../app/providers/SupabaseAuthProvider'
 
 export default function LoginForm() {
   const [email, setEmail] = useState('')
@@ -10,7 +10,7 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
-  const { signIn } = useAuthContext()
+  // Using Supabase directly for sign in
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {

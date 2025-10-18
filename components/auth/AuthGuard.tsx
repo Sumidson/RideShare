@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuthContext } from '../../app/providers/AuthProvider'
+import { useSupabaseAuth } from '../../app/providers/SupabaseAuthProvider'
 
 interface AuthGuardProps {
   children: React.ReactNode
@@ -15,7 +15,7 @@ export default function AuthGuard({
   requireAuth = true, 
   redirectTo = '/login' 
 }: AuthGuardProps) {
-  const { user, loading } = useAuthContext()
+  const { user, loading } = useSupabaseAuth()
   const router = useRouter()
 
   useEffect(() => {
@@ -23,7 +23,7 @@ export default function AuthGuard({
       if (requireAuth && !user) {
         router.push(redirectTo)
       } else if (!requireAuth && user) {
-        router.push('/dasboard')
+        router.push('/dashboard')
       }
     }
   }, [user, loading, requireAuth, redirectTo, router])

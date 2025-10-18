@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { apiClient } from '@/app/lib/api';
+import { supabaseApiClient } from '@/app/lib/supabaseApiClient';
 import AuthGuard from '@/components/auth/AuthGuard';
 import { 
   MapPin, 
@@ -75,7 +75,7 @@ const CreateRidePage: React.FC = () => {
     setIsSubmitting(true);
     try {
       const departureIso = new Date(`${rideData.date}T${rideData.time}:00`).toISOString();
-      const response = await apiClient.createRide({
+      const response = await supabaseApiClient.createRide({
         origin: String(rideData.from),
         destination: String(rideData.to),
         departure_time: departureIso,

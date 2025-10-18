@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { User, Mail, Lock, Eye, EyeOff, ArrowRight, Check } from "lucide-react";
-import { useAuthContext } from '@/app/providers/AuthProvider';
+import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 
 const SignUpPage = () => {
@@ -17,7 +17,7 @@ const SignUpPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [apiError, setApiError] = useState<string | null>(null);
-  const { signUp } = useAuthContext();
+  // Using Supabase directly for signup
   const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,14 +74,28 @@ const SignUpPage = () => {
 
     setIsSubmitting(true);
     setApiError(null);
-    const { error } = await signUp(formData.email, formData.password, { full_name: formData.name });
-    if (error) {
-      setApiError(error);
+    
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            full_name: formData.name
+          }
+        }
+      });
+      
+      if (error) {
+        setApiError(error.message);
+      } else {
+        router.push('/login');
+      }
+    } catch (err) {
+      setApiError('An unexpected error occurred');
+    } finally {
       setIsSubmitting(false);
-      return;
     }
-    setIsSubmitting(false);
-    router.push('/login');
   };
 
   const passwordStrength = () => {

@@ -1,12 +1,12 @@
 "use client"
 import Link from "next/link";
 import { useState } from "react";
-import { useAuthContext } from '@/app/providers/AuthProvider';
+import { useSupabaseAuth } from '@/app/providers/SupabaseAuthProvider';
 import { Car, Menu, X, User, Plus, MapPin, Home, LogIn, LogOut, UserPlus } from "lucide-react";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, signOut } = useAuthContext();
+  const { user, signOut } = useSupabaseAuth();
   const isLoggedIn = !!user;
 
   const navItems = [

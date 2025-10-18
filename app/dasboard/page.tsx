@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 // Removed unused legacy supabase auth; using context-based auth
-import { useAuthContext } from '@/app/providers/AuthProvider'
+import { useSupabaseAuth } from '@/app/providers/SupabaseAuthProvider'
 import { useRouter } from 'next/navigation'
 
 export default function Dashboard() {
@@ -11,7 +11,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
-  const { user: ctxUser, signOut } = useAuthContext()
+  const { user: ctxUser, signOut } = useSupabaseAuth()
 
   useEffect(() => {
     if (!ctxUser) {

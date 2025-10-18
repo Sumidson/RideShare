@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuthContext } from '../../app/providers/AuthProvider'
+import { useSupabaseAuth } from '../../app/providers/SupabaseAuthProvider'
 
 export default function RegisterForm() {
   const [formData, setFormData] = useState({
@@ -15,7 +15,7 @@ export default function RegisterForm() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   
-  const { signUp } = useAuthContext()
+  // Using Supabase directly for sign up
   const router = useRouter()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

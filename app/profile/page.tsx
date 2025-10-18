@@ -19,7 +19,7 @@ import {
   Lock,
   MessageCircle
 } from 'lucide-react';
-import { useAuthContext } from '@/app/providers/AuthProvider';
+import { useSupabaseAuth } from '@/app/providers/SupabaseAuthProvider';
 import { apiClient } from '@/app/lib/api';
 import AuthGuard from '@/components/auth/AuthGuard';
 import { useRouter } from 'next/navigation';
@@ -81,7 +81,7 @@ const ProfilePage = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   
-  const { user } = useAuthContext();
+  const { user } = useSupabaseAuth();
   const router = useRouter();
 
   useEffect(() => {

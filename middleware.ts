@@ -1,28 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-export function middleware(request: NextRequest) {
-  // Define protected API routes
-  const protectedRoutes = [
-    '/api/rides',
+export async function middleware(request: NextRequest) {
+  // Define routes that require authentication for all methods
+  const fullyProtectedRoutes = [
     '/api/bookings',
     '/api/users/profile',
     '/api/reviews'
   ]
 
-  // Check if the current path is a protected route
-  const isProtectedRoute = protectedRoutes.some(route => 
+  // Define routes that only require auth for POST/PUT/DELETE (not GET)
+  const partiallyProtectedRoutes = [
+    '/api/rides'
+  ]
+
+  const isFullyProtected = fullyProtectedRoutes.some(route => 
     request.nextUrl.pathname.startsWith(route)
   )
 
-  if (isProtectedRoute) {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '')
-    
-    if (!token) {
+  const isPartiallyProtected = partiallyProtectedRoutes.some(route => 
+    request.nextUrl.pathname.startsWith(route)
+  )
+
+  // Check if authentication is required
+  const requiresAuth = isFullyProtected || 
+    (isPartiallyProtected && request.method !== 'GET')
+
+  if (requiresAuth) {
+    // Get the session token from authorization header
+    const authHeader = request.headers.get('authorization')
+    const sessionToken = authHeader?.replace('Bearer ', '')
+
+    if (!sessionToken) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       )
     }
+
+    // Let the API route handle the token validation
+    // Just pass the token through
+    return NextResponse.next()
   }
 
   return NextResponse.next()
