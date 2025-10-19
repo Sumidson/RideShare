@@ -7,6 +7,14 @@ const nextConfig: NextConfig = {
   // External packages for server components
   serverExternalPackages: ['@prisma/client'],
   
+  // Skip build-time errors for deployment
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+  eslint: {
+    ignoreDuringBuilds: false,
+  },
+  
   // Environment variables
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
