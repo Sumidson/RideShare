@@ -1,0 +1,20 @@
+runtime: nodejs20
+
+env_variables:
+  NODE_ENV: production
+  DATABASE_URL: postgresql://postgres.pdjghovznwblamtucplf:Myrideshare123@aws-0-us-west-1.pooler.supabase.com:6543/postgres
+  DIRECT_URL: postgresql://postgres:Myrideshare123@db.pdjghovznwblamtucplf.supabase.co:5432/postgres
+  NEXT_PUBLIC_SUPABASE_URL: https://pdjghovznwblamtucplf.supabase.co
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkamdob3Z6bndibGFtdHVjcGxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQyMjIwNzYsImV4cCI6MjA2OTc5ODA3Nn0.v_yp8WJUdbaR-ttq6XHIewTpJnW10saiYlNG4LlVLWY
+  SUPABASE_SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkamdob3Z6bndibGFtdHVjcGxmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NDIyMjA3NiwiZXhwIjoyMDY5Nzk4MDc2fQ.csMqIW5ye1wJW5X8zvQWM_YhaH27mr2YkgjvEbmGqCk
+  JWT_SECRET: your-super-secret-jwt-key-that-should-be-at-least-32-characters-long
+
+automatic_scaling:
+  min_instances: 0
+  max_instances: 10
+  target_cpu_utilization: 0.6
+
+resources:
+  cpu: 1
+  memory_gb: 0.5
+  disk_size_gb: 10
