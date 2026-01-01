@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
-import { verifyJWT } from '@/app/lib/auth'
+// import { verifyJWT } from '@/app/lib/auth'
 import { z } from 'zod'
 import { Prisma, BookingStatus } from '@prisma/client'
 
@@ -12,7 +12,7 @@ const createBookingSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
-    
+
     if (!token) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -20,13 +20,48 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const decoded = verifyJWT(token)
-    if (!decoded?.userId) {
+    // Validate the token with Supabase
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+    // Create Supabase client with the headers
+    const { createClient } = await import('@supabase/supabase-js')
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    })
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
       return NextResponse.json(
-        { error: 'Invalid token' },
+        { error: 'Invalid authentication token', details: authError?.message },
         { status: 401 }
       )
     }
+    const userId = user.id
+
+    // Ensure user exists in local database
+    await prisma.user.upsert({
+      where: { id: userId },
+      update: {
+        email: user.email!,
+        full_name: user.user_metadata?.full_name,
+        avatar_url: user.user_metadata?.avatar_url,
+        username: user.user_metadata?.username,
+      },
+      create: {
+        id: userId,
+        email: user.email!,
+        full_name: user.user_metadata?.full_name,
+        avatar_url: user.user_metadata?.avatar_url,
+        username: user.user_metadata?.username,
+        email_verified: true,
+      }
+    })
 
     const body = await request.json()
     const bookingData = createBookingSchema.parse(body)
@@ -59,7 +94,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user is trying to book their own ride
-    if (ride.driver_id === decoded.userId) {
+    if (ride.driver_id === userId) {
       return NextResponse.json(
         { error: 'Cannot book your own ride' },
         { status: 400 }
@@ -70,7 +105,7 @@ export async function POST(request: NextRequest) {
     const bookedSeats = ride.bookings
       .filter(booking => booking.status === 'CONFIRMED')
       .reduce((sum, booking) => sum + booking.seats_booked, 0)
-    
+
     const availableSeats = ride.available_seats - bookedSeats
 
     if (bookingData.seats_booked > availableSeats) {
@@ -84,7 +119,7 @@ export async function POST(request: NextRequest) {
     const existingBooking = await prisma.booking.findFirst({
       where: {
         ride_id: bookingData.ride_id,
-        passenger_id: decoded.userId,
+        passenger_id: userId,
         status: {
           in: ['PENDING', 'CONFIRMED']
         }
@@ -103,7 +138,7 @@ export async function POST(request: NextRequest) {
     const booking = await prisma.booking.create({
       data: {
         ride_id: bookingData.ride_id,
-        passenger_id: decoded.userId,
+        passenger_id: userId,
         seats_booked: bookingData.seats_booked,
         total_price: totalPrice
       },
@@ -138,7 +173,7 @@ export async function POST(request: NextRequest) {
     }, { status: 201 })
   } catch (error) {
     console.error('Error creating booking:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Validation error', details: error.issues },
@@ -147,7 +182,10 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: 'Failed to create booking' },
+      {
+        error: 'Failed to create booking',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     )
   }
@@ -156,7 +194,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
-    
+
     if (!token) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -164,13 +202,28 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const decoded = verifyJWT(token)
-    if (!decoded?.userId) {
+    // Validate the token with Supabase
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+    const { createClient } = await import('@supabase/supabase-js')
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    })
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
       return NextResponse.json(
-        { error: 'Invalid token' },
+        { error: 'Invalid authentication token', details: authError?.message },
         { status: 401 }
       )
     }
+    const userId = user.id
 
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
@@ -179,7 +232,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit
 
     const where: Prisma.BookingWhereInput = {
-      passenger_id: decoded.userId
+      passenger_id: userId
     }
 
     if (status && Object.values(BookingStatus).includes(status as BookingStatus)) {

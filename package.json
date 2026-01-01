@@ -13,7 +13,9 @@
     "postinstall": "prisma generate",
     "heroku-postbuild": "prisma generate && npm run build",
     "docker:build": "docker build -t rideshare .",
-    "docker:run": "docker run -p 3000:3000 rideshare"
+    "docker:run": "docker run -p 3000:3000 rideshare",
+    "fix-prisma": "powershell -ExecutionPolicy Bypass -File scripts/fix-prisma.ps1",
+    "clean": "rm -rf .next node_modules/.prisma && npm run db:generate"
   },
   "dependencies": {
     "@prisma/client": "^6.14.0",

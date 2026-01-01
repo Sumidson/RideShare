@@ -20,7 +20,7 @@ import {
   User
 } from 'lucide-react';
 import { useSupabaseAuth } from '@/app/providers/SupabaseAuthProvider';
-import { apiClient } from '@/app/lib/api';
+import { supabaseApiClient } from '@/app/lib/supabaseApiClient';
 import AuthGuard from '@/components/auth/AuthGuard';
 import { useRouter } from 'next/navigation';
 
@@ -80,14 +80,14 @@ const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   const { user } = useSupabaseAuth();
   const router = useRouter();
 
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        const { data, error } = await apiClient.getBookings();
+        const { data, error } = await supabaseApiClient.getBookings();
         if (error) {
           console.error('Failed to fetch bookings:', error);
         } else {
@@ -105,11 +105,11 @@ const ProfilePage = () => {
     }
   }, [user]);
 
-  const upcomingBookings = bookings.filter(booking => 
+  const upcomingBookings = bookings.filter(booking =>
     ['PENDING', 'CONFIRMED'].includes(booking.status)
   );
 
-  const pastBookings = bookings.filter(booking => 
+  const pastBookings = bookings.filter(booking =>
     ['COMPLETED', 'CANCELLED'].includes(booking.status)
   );
 
@@ -140,7 +140,7 @@ const ProfilePage = () => {
   return (
     <AuthGuard>
       <div className="min-h-screen bg-gradient-to-br from-slate-100 via-gray-50 to-slate-200">
-        <motion.div 
+        <motion.div
           className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
           variants={containerVariants}
           initial="hidden"
@@ -154,7 +154,7 @@ const ProfilePage = () => {
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6">
               <div className="flex items-center space-x-6 mb-4 md:mb-0">
                 <div className="relative">
-                  <motion.div 
+                  <motion.div
                     className="w-24 h-24 bg-gradient-to-r from-slate-600 to-slate-800 rounded-full flex items-center justify-center text-4xl text-white"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
@@ -193,19 +193,19 @@ const ProfilePage = () => {
                 </div>
               </div>
               <div className="flex space-x-3">
-                <motion.button 
-                  whileHover={{ scale: 1.05 }} 
-                  whileTap={{ scale: 0.95 }} 
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => router.push('/reviews')}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-semibold flex items-center space-x-2 transition-colors"
                 >
                   <MessageCircle className="h-4 w-4" />
                   <span>View Reviews</span>
                 </motion.button>
-                <motion.button 
-                  whileHover={{ scale: 1.05 }} 
-                  whileTap={{ scale: 0.95 }} 
-                  onClick={() => setIsEditing(!isEditing)} 
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setIsEditing(!isEditing)}
                   className="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-xl font-semibold flex items-center space-x-2 transition-colors"
                 >
                   <Edit3 className="h-4 w-4" />
@@ -213,9 +213,9 @@ const ProfilePage = () => {
                 </motion.button>
               </div>
             </div>
-            
+
             {/* Stats Cards */}
-            <motion.div 
+            <motion.div
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
               variants={containerVariants}
             >
@@ -225,10 +225,10 @@ const ProfilePage = () => {
                 { label: 'Completed', value: pastBookings.filter(b => b.status === 'COMPLETED').length, icon: Award, color: 'purple' },
                 { label: 'Total Spent', value: `$${bookings.reduce((sum, b) => sum + b.total_price, 0).toFixed(2)}`, icon: TrendingUp, color: 'orange' },
               ].map(stat => (
-                <motion.div 
-                  key={stat.label} 
+                <motion.div
+                  key={stat.label}
                   className="bg-gradient-to-r from-slate-50 to-gray-100 p-4 rounded-xl border border-slate-100"
-                  variants={{...itemVariants, ...cardHoverVariant}}
+                  variants={{ ...itemVariants, ...cardHoverVariant }}
                   whileHover="hover"
                 >
                   <div className="flex items-center space-x-2 text-slate-800 font-semibold">
@@ -256,9 +256,8 @@ const ProfilePage = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`relative flex-1 flex items-center justify-center space-x-2 px-4 py-3 rounded-xl font-semibold transition-colors ${
-                    activeTab === tab.id ? 'text-white' : 'text-gray-600 hover:bg-gray-100'
-                  }`}
+                  className={`relative flex-1 flex items-center justify-center space-x-2 px-4 py-3 rounded-xl font-semibold transition-colors ${activeTab === tab.id ? 'text-white' : 'text-gray-600 hover:bg-gray-100'
+                    }`}
                 >
                   {activeTab === tab.id && (
                     <motion.div
@@ -324,7 +323,7 @@ const ProfilePage = () => {
                   </motion.div>
                 </div>
               )}
-              
+
               {activeTab === 'upcoming' && (
                 <motion.div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100" variants={itemVariants}>
                   <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
@@ -338,10 +337,10 @@ const ProfilePage = () => {
                   ) : (
                     <motion.div className="space-y-4" variants={containerVariants}>
                       {upcomingBookings.map((booking) => (
-                        <motion.div 
-                          key={booking.id} 
-                          variants={{...itemVariants, ...cardHoverVariant}} 
-                          whileHover="hover" 
+                        <motion.div
+                          key={booking.id}
+                          variants={{ ...itemVariants, ...cardHoverVariant }}
+                          whileHover="hover"
                           className="border border-gray-200 rounded-xl p-4 transition-shadow hover:shadow-md"
                         >
                           <div className="flex justify-between items-start">
@@ -372,7 +371,7 @@ const ProfilePage = () => {
                   )}
                 </motion.div>
               )}
-              
+
               {activeTab === 'history' && (
                 <motion.div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100" variants={itemVariants}>
                   <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
@@ -386,10 +385,10 @@ const ProfilePage = () => {
                   ) : (
                     <motion.div className="space-y-4" variants={containerVariants}>
                       {pastBookings.map((booking) => (
-                        <motion.div 
-                          key={booking.id} 
-                          variants={{...itemVariants, ...cardHoverVariant}} 
-                          whileHover="hover" 
+                        <motion.div
+                          key={booking.id}
+                          variants={{ ...itemVariants, ...cardHoverVariant }}
+                          whileHover="hover"
                           className="border border-gray-200 rounded-xl p-4 transition-shadow hover:shadow-md"
                         >
                           <div className="flex justify-between items-start">
@@ -420,7 +419,7 @@ const ProfilePage = () => {
                   )}
                 </motion.div>
               )}
-              
+
               {activeTab === 'settings' && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   <motion.div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100" variants={itemVariants}>

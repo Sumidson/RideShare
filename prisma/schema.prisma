@@ -5,33 +5,33 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+   directUrl = env("DIRECT_URL")  
 }
 
 model User {
-  id            String   @id @default(uuid())
-  email         String   @unique
-  username      String?  @unique
-  full_name     String?
-  avatar_url    String?
-  phone         String?
-  bio           String?
-  password      String?  // Added for local authentication
-  rating        Float    @default(0)
-  total_rides   Int      @default(0)
-  role          UserRole @default(USER)
-  email_verified Boolean @default(false)
-  is_verified   Boolean  @default(false)
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
-  
+  id               String    @id @default(uuid())
+  email            String    @unique
+  username         String?   @unique
+  full_name        String?
+  avatar_url       String?
+  phone            String?
+  bio              String?
+  password         String? // Added for local authentication
+  rating           Float     @default(0)
+  total_rides      Int       @default(0)
+  role             UserRole  @default(USER)
+  email_verified   Boolean   @default(false)
+  is_verified      Boolean   @default(false)
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+
   // Relations
-  sessions      Session[]
-  rides_as_driver    Ride[]    @relation("DriverRides")
+  sessions              Session[]
+  rides_as_driver       Ride[]    @relation("DriverRides")
   bookings_as_passenger Booking[] @relation("PassengerBookings")
-  reviews_given       Review[]  @relation("Reviewer")
-  reviews_received    Review[]  @relation("ReviewedUser")
-  
+  reviews_given         Review[]  @relation("Reviewer")
+  reviews_received      Review[]  @relation("ReviewedUser")
+
   @@map("users")
 }
 
@@ -41,64 +41,64 @@ model Session {
   token      String   @unique
   expires_at DateTime
   created_at DateTime @default(now())
-  
+
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  
+
   @@map("sessions")
 }
 
 model Ride {
-  id          String   @id @default(uuid())
-  driver_id   String
-  origin      String
-  destination String
-  departure_time DateTime
+  id              String     @id @default(uuid())
+  driver_id       String
+  origin          String
+  destination     String
+  departure_time  DateTime
   available_seats Int
-  price_per_seat Float
-  description String?
-  status      RideStatus @default(ACTIVE)
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
-  
+  price_per_seat  Float
+  description     String?
+  status          RideStatus @default(ACTIVE)
+  created_at      DateTime   @default(now())
+  updated_at      DateTime   @updatedAt
+
   // Relations
-  driver      User      @relation("DriverRides", fields: [driver_id], references: [id], onDelete: Cascade)
-  bookings    Booking[]
-  reviews     Review[]
-  
+  driver   User      @relation("DriverRides", fields: [driver_id], references: [id], onDelete: Cascade)
+  bookings Booking[]
+  reviews  Review[]
+
   @@map("rides")
 }
 
 model Booking {
-  id         String   @id @default(uuid())
-  ride_id    String
+  id           String        @id @default(uuid())
+  ride_id      String
   passenger_id String
   seats_booked Int
-  total_price Float
-  status     BookingStatus @default(PENDING)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  
+  total_price  Float
+  status       BookingStatus @default(PENDING)
+  created_at   DateTime      @default(now())
+  updated_at   DateTime      @updatedAt
+
   // Relations
-  ride       Ride     @relation(fields: [ride_id], references: [id], onDelete: Cascade)
-  passenger  User     @relation("PassengerBookings", fields: [passenger_id], references: [id], onDelete: Cascade)
-  
+  ride      Ride @relation(fields: [ride_id], references: [id], onDelete: Cascade)
+  passenger User @relation("PassengerBookings", fields: [passenger_id], references: [id], onDelete: Cascade)
+
   @@map("bookings")
 }
 
 model Review {
-  id          String   @id @default(uuid())
-  reviewer_id String
+  id               String   @id @default(uuid())
+  reviewer_id      String
   reviewed_user_id String
-  ride_id     String
-  rating      Int
-  comment     String?
-  created_at  DateTime @default(now())
-  
+  ride_id          String
+  rating           Int
+  comment          String?
+  created_at       DateTime @default(now())
+
   // Relations
-  reviewer    User     @relation("Reviewer", fields: [reviewer_id], references: [id], onDelete: Cascade)
-  reviewed_user User   @relation("ReviewedUser", fields: [reviewed_user_id], references: [id], onDelete: Cascade)
-  ride        Ride     @relation(fields: [ride_id], references: [id], onDelete: Cascade)
-  
+  reviewer      User @relation("Reviewer", fields: [reviewer_id], references: [id], onDelete: Cascade)
+  reviewed_user User @relation("ReviewedUser", fields: [reviewed_user_id], references: [id], onDelete: Cascade)
+  ride          Ride @relation(fields: [ride_id], references: [id], onDelete: Cascade)
+
   @@map("reviews")
 }
 
@@ -121,3 +121,4 @@ enum BookingStatus {
   CANCELLED
   COMPLETED
 }
+

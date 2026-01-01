@@ -4,9 +4,9 @@ import { apiClient } from '@/app/lib/api';
 import { useRouter } from 'next/navigation';
 // 1. Import motion and AnimatePresence from framer-motion
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Search, 
-  ArrowRight, 
+import {
+  Search,
+  ArrowRight,
   ChevronDown
 } from 'lucide-react';
 
@@ -36,8 +36,8 @@ const itemVariants = {
 
 const rideCardVariants = {
   hidden: { opacity: 0, scale: 0.95 },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     scale: 1,
     transition: { duration: 0.4, ease: "easeOut" }
   },
@@ -85,7 +85,7 @@ const RidesPage = () => {
             // You could set a state to show a database setup message
           }
         } else {
-          const items = ((data as { rides: RideItem[] })?.rides) || [];
+          const items = ((data as { data: RideItem[] })?.data) || [];
           setRides(items);
         }
       } catch (err) {
@@ -110,14 +110,14 @@ const RidesPage = () => {
 
   return (
     // 3. Apply motion to components throughout the page
-    <motion.div 
+    <motion.div
       className="min-h-screen bg-white"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Header */}
         <motion.div className="pt-12 pb-8 text-center" variants={itemVariants}>
           <h1 className="text-4xl md:text-5xl font-light text-gray-900 mb-4">
@@ -129,7 +129,7 @@ const RidesPage = () => {
         </motion.div>
 
         {/* Search Section */}
-        <motion.div 
+        <motion.div
           className="bg-gray-50 rounded-2xl p-8 mb-12 border border-gray-100"
           variants={itemVariants}
         >
@@ -146,7 +146,7 @@ const RidesPage = () => {
             </div>
 
             {/* Filters */}
-            <motion.div 
+            <motion.div
               className="flex flex-wrap gap-3 justify-center"
               variants={containerVariants}
             >
@@ -156,20 +156,18 @@ const RidesPage = () => {
                 <motion.button
                   key={filter.key}
                   onClick={() => setSelectedFilter(filter.key)}
-                  className={`px-6 py-3 rounded-full font-medium transition-all duration-300 ${
-                    selectedFilter === filter.key
+                  className={`px-6 py-3 rounded-full font-medium transition-all duration-300 ${selectedFilter === filter.key
                       ? 'bg-gray-900 text-white shadow-md'
                       : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
-                  }`}
+                    }`}
                   variants={itemVariants}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
                   {filter.label}
                   {filter.count > 0 && (
-                    <span className={`ml-2 text-sm ${
-                      selectedFilter === filter.key ? 'text-gray-300' : 'text-gray-400'
-                    }`}>
+                    <span className={`ml-2 text-sm ${selectedFilter === filter.key ? 'text-gray-300' : 'text-gray-400'
+                      }`}>
                       {filter.count}
                     </span>
                   )}
@@ -192,7 +190,7 @@ const RidesPage = () => {
 
         {/* Rides Grid */}
         <AnimatePresence mode="wait">
-          <motion.div 
+          <motion.div
             key={selectedFilter} // Re-animate when filter changes
             className="space-y-6"
             variants={containerVariants}
@@ -200,10 +198,10 @@ const RidesPage = () => {
             animate="visible"
             exit="hidden"
           >
-             {loading ? (
-               <motion.div className="text-center py-20">Loading rides...</motion.div>
-             ) : filteredRides.length === 0 ? (
-              <motion.div 
+            {loading ? (
+              <motion.div className="text-center py-20">Loading rides...</motion.div>
+            ) : filteredRides.length === 0 ? (
+              <motion.div
                 className="text-center py-20"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -214,8 +212,8 @@ const RidesPage = () => {
                 </div>
                 <h3 className="text-xl font-medium text-gray-900 mb-2">No rides found</h3>
                 <p className="text-gray-600 font-light">
-                  {rides.length === 0 && !loading ? 
-                    "No rides available. This might be because the database is not set up yet. Please check the DATABASE_SETUP.md file for setup instructions." : 
+                  {rides.length === 0 && !loading ?
+                    "No rides available. This might be because the database is not set up yet. Please check the DATABASE_SETUP.md file for setup instructions." :
                     "Try adjusting your search or filters"
                   }
                 </p>
@@ -229,34 +227,34 @@ const RidesPage = () => {
                   whileHover="hover"
                   layout // This prop animates layout changes smoothly
                 >
-                    <div className="grid lg:grid-cols-12 gap-6 items-center">
-                        <div className="lg:col-span-3">
-                          <div className="font-medium text-gray-900">{ride.driver?.full_name || ride.driver?.username || 'Driver'}</div>
-                          <div className="text-gray-500 text-sm">Rating: {ride.driver?.rating ?? '-'}</div>
-                        </div>
-                        <div className="lg:col-span-4">
-                          <div className="text-gray-900 font-medium">{ride.origin} → {ride.destination}</div>
-                          <div className="text-gray-500 text-sm">{new Date(ride.departure_time).toLocaleString()}</div>
-                        </div>
-                        <div className="lg:col-span-3">
-                          <div className="text-gray-900">Seats: {ride.available_seats}</div>
-                          <div className="text-gray-900">Price: ${ride.price_per_seat}</div>
-                        </div>
-                        <div className="lg:col-span-2 text-right">
-                          <motion.button
-                            onClick={() => handleBooking(ride.id)}
-                            className="w-full bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.98 }}
-                          >
-                            <span>Book Now</span>
-                            <ArrowRight className="w-4 h-4" />
-                          </motion.button>
-                        </div>
+                  <div className="grid lg:grid-cols-12 gap-6 items-center">
+                    <div className="lg:col-span-3">
+                      <div className="font-medium text-gray-900">{ride.driver?.full_name || ride.driver?.username || 'Driver'}</div>
+                      <div className="text-gray-500 text-sm">Rating: {ride.driver?.rating ?? '-'}</div>
                     </div>
-                    <div className="mt-4 pt-4 border-t border-gray-50">
-                        <p className="text-sm text-gray-600 font-light">{ride.description}</p>
+                    <div className="lg:col-span-4">
+                      <div className="text-gray-900 font-medium">{ride.origin} → {ride.destination}</div>
+                      <div className="text-gray-500 text-sm">{new Date(ride.departure_time).toLocaleString()}</div>
                     </div>
+                    <div className="lg:col-span-3">
+                      <div className="text-gray-900">Seats: {ride.available_seats}</div>
+                      <div className="text-gray-900">Price: ${ride.price_per_seat}</div>
+                    </div>
+                    <div className="lg:col-span-2 text-right">
+                      <motion.button
+                        onClick={() => handleBooking(ride.id)}
+                        className="w-full bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <span>Book Now</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </motion.button>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-gray-50">
+                    <p className="text-sm text-gray-600 font-light">{ride.description}</p>
+                  </div>
                 </motion.div>
               ))
             )}
@@ -264,11 +262,11 @@ const RidesPage = () => {
         </AnimatePresence>
       </div>
 
-       {/* Load More & Bottom CTA can also be wrapped in motion.div with itemVariants */}
+      {/* Load More & Bottom CTA can also be wrapped in motion.div with itemVariants */}
       <motion.div className="text-center" variants={itemVariants}>
         {filteredRides.length > 0 && (
           <div className="text-center py-16">
-            <motion.button 
+            <motion.button
               className="px-8 py-4 border border-gray-200 text-gray-700 rounded-xl font-medium hover:border-gray-300 hover:bg-gray-50 transition-all duration-300"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -285,7 +283,7 @@ const RidesPage = () => {
           <p className="text-gray-600 font-light mb-8">
             Create your own trip and let drivers come to you
           </p>
-          <motion.button 
+          <motion.button
             className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-medium transition-all duration-300"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

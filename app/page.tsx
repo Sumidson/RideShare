@@ -1,7 +1,9 @@
 "use client";
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Users, CheckCircle, Download, MapPin, Plus, Star, ArrowRight, X, DollarSign, AlertTriangle, Shield, Phone, Calculator } from 'lucide-react';
+// 1. IMPORT Link HERE
+import Link from 'next/link';
+import { Users, CheckCircle, Download, MapPin, Plus, Star, ArrowRight, X, IndianRupee, AlertTriangle, Shield, Phone, Calculator } from 'lucide-react';
 
 // Enhanced motion variants
 const sectionVariants = {
@@ -43,10 +45,20 @@ const cardVariants = {
 // Professional Cost Calculator Component with animations
 const CostCalculator = () => {
   const [distance, setDistance] = useState(10);
-  const rideShareCost = distance * 3;
-  const gooberCost = distance * 5.5;
-  const lolaCost = distance * 4.8;
-  const taxiCost = distance * 4.2;
+  
+  // Adjusted rates for INR
+  const rideShareRate = 20; // ₹20/km
+  const gooberRate = 37;    // (5.5/3) * 20 = ~₹37/km
+  const lolaRate = 32;      // (4.8/3) * 20 = ₹32/km
+  const taxiRate = 28;      // (4.2/3) * 20 = ₹28/km
+
+  const rideShareCost = distance * rideShareRate;
+  const gooberCost = distance * gooberRate;
+  const lolaCost = distance * lolaRate;
+  const taxiCost = distance * taxiRate;
+  
+  const competitorAvgCost = (gooberCost + lolaCost + taxiCost) / 3;
+  const competitorAvgRate = (gooberRate + lolaRate + taxiRate) / 3;
   
   return (
     <motion.div 
@@ -130,9 +142,9 @@ const CostCalculator = () => {
                 animate={{ scale: 1 }}
                 transition={{ duration: 0.2 }}
               >
-                ${rideShareCost}
+                ₹{rideShareCost}
               </motion.p>
-              <p className="text-xs text-emerald-600">$3/km</p>
+              <p className="text-xs text-emerald-600">₹{rideShareRate}/km</p>
             </motion.div>
             
             <motion.div 
@@ -143,14 +155,14 @@ const CostCalculator = () => {
               <p className="text-sm font-medium text-red-700 mb-2">Others</p>
               <motion.p 
                 className="text-3xl font-bold text-red-600 mb-1"
-                key={Math.round((gooberCost + lolaCost + taxiCost) / 3)}
+                key={Math.round(competitorAvgCost)}
                 initial={{ scale: 1.2 }}
                 animate={{ scale: 1 }}
                 transition={{ duration: 0.2 }}
               >
-                ${Math.round((gooberCost + lolaCost + taxiCost) / 3)}
+                ₹{Math.round(competitorAvgCost)}
               </motion.p>
-              <p className="text-xs text-red-600">~$4.8/km avg</p>
+              <p className="text-xs text-red-600">~₹{Math.round(competitorAvgRate)}/km avg</p>
             </motion.div>
           </motion.div>
           
@@ -161,15 +173,15 @@ const CostCalculator = () => {
           >
             <motion.p 
               className="text-xl font-bold text-slate-800 mb-1"
-              key={Math.round(((gooberCost + lolaCost + taxiCost) / 3) - rideShareCost)}
+              key={Math.round(competitorAvgCost - rideShareCost)}
               initial={{ scale: 1.2 }}
               animate={{ scale: 1 }}
               transition={{ duration: 0.2 }}
             >
-              You save ${Math.round(((gooberCost + lolaCost + taxiCost) / 3) - rideShareCost)} on this trip!
+              You save ₹{Math.round(competitorAvgCost - rideShareCost)} on this trip!
             </motion.p>
             <p className="text-sm text-slate-700">
-              That&apos;s {Math.round((1 - (rideShareCost / ((gooberCost + lolaCost + taxiCost) / 3))) * 100)}% less than competitors
+              That&apos;s {Math.round((1 - (rideShareCost / competitorAvgCost)) * 100)}% less than competitors
             </p>
           </motion.div>
           
@@ -365,7 +377,7 @@ const ElegantRideshareLanding = () => {
                   className="text-xl text-slate-600 font-light leading-relaxed"
                   variants={itemVariants}
                 >
-                  Our transparent pricing at just <strong>$3 per kilometer</strong> helps you save significantly compared to traditional ride services.
+                  Our transparent pricing at just <strong>₹20 per kilometer</strong> helps you save significantly compared to traditional ride services.
                 </motion.p>
               </motion.div>
               
@@ -375,7 +387,7 @@ const ElegantRideshareLanding = () => {
               >
                 {[
                   { icon: CheckCircle, text: "No surge pricing", color: "text-emerald-600" },
-                  { icon: DollarSign, text: "Transparent $3/km rate", color: "text-slate-600" },
+                  { icon: IndianRupee, text: "Transparent ₹20/km rate", color: "text-slate-600" },
                   { icon: Users, text: "Share costs with riders", color: "text-slate-600" },
                   { icon: ArrowRight, text: "60% cheaper than competitors", color: "text-slate-600" }
                 ].map((item, index) => (
@@ -527,18 +539,21 @@ const ElegantRideshareLanding = () => {
               </motion.div>
             ))}
 
+            {/* 2. WRAP THE BUTTON WITH THE LINK COMPONENT */}
             <motion.div 
               className="text-center mt-10"
               variants={itemVariants}
             >
-              <motion.button 
-                className="bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-900 hover:to-black text-white px-8 py-3 rounded-full font-semibold shadow-lg"
-                whileHover={{ scale: 1.05, boxShadow: "0 10px 30px rgba(0,0,0,0.2)" }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ duration: 0.2 }}
-              >
-                View all activity →
-              </motion.button>
+              <Link href="/find-rides" passHref>
+                <motion.button 
+                  className="bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-900 hover:to-black text-white px-8 py-3 rounded-full font-semibold shadow-lg"
+                  whileHover={{ scale: 1.05, boxShadow: "0 10px 30px rgba(0,0,0,0.2)" }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  View all activity →
+                </motion.button>
+              </Link>
             </motion.div>
           </motion.div>
         </div>
@@ -702,7 +717,7 @@ const ElegantRideshareLanding = () => {
                     whileHover={{ rotate: 360 }}
                     transition={{ duration: 0.6 }}
                   >
-                    <DollarSign className="w-6 h-6 text-red-600" />
+                    <IndianRupee className="w-6 h-6 text-red-600" />
                   </motion.div>
                 </div>
                 
@@ -762,7 +777,7 @@ const ElegantRideshareLanding = () => {
                 
                 <div className="space-y-3 mb-6">
                   {[
-                    "Affordable $3/km transparent pricing",
+                    "Affordable ₹20/km transparent pricing",
                     "Cost savings up to 60%",
                     "Eco-friendly ride sharing",
                     "Verified and trusted community",
