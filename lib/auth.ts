@@ -7,11 +7,11 @@ export const signInWithGoogle = async () => {
       redirectTo: `${window.location.origin}/rides`
     }
   })
-  
+
   if (error) {
     throw error
   }
-  
+
   return data
 }
 
@@ -30,11 +30,11 @@ export const signUpWithEmail = async (email: string, password: string, userData?
       data: userData
     }
   })
-  
+
   if (error) {
     throw error
   }
-  
+
   return data
 }
 
@@ -43,10 +43,10 @@ export const signInWithEmail = async (email: string, password: string) => {
     email,
     password
   })
-  
+
   if (error) {
     throw error
   }
-  
+
   return data
 }

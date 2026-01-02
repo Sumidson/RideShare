@@ -41,4 +41,6 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 >>>>>>> 48f3aa60f3875e5eeb4aa7c8d53e6a819a8a2575
 =======
 # RideShare
+![Deployment Status](https://img.shields.io/badge/deployment-ready-green)
+
 >>>>>>> ff512b103cfa33d5b2ffff6620d2c3b0b7c9b92f
