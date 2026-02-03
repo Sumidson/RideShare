@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { User, Mail, Lock, Eye, EyeOff, ArrowRight, Check } from "lucide-react";
 import { supabase } from '@/lib/supabase';
+import { apiClient } from '@/app/lib/api';
 import { useRouter } from 'next/navigation';
 
 const SignUpPage = () => {
@@ -65,7 +66,7 @@ const SignUpPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const newErrors = validateForm();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -74,21 +75,21 @@ const SignUpPage = () => {
 
     setIsSubmitting(true);
     setApiError(null);
-    
+
     try {
-      const { error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            full_name: formData.name
-          }
-        }
-      });
-      
+      const { data, error } = await apiClient.signup(
+        formData.email,
+        formData.password,
+        undefined,
+        formData.name
+      );
+
       if (error) {
-        setApiError(error.message);
+        setApiError(error);
       } else {
+        if (data && typeof data === 'object' && 'session' in data && (data as any).session) {
+          await supabase.auth.setSession((data as any).session);
+        }
         router.push('/login');
       }
     } catch {
@@ -111,7 +112,7 @@ const SignUpPage = () => {
   return (
     <div className="min-h-screen bg-white flex items-center justify-center py-12 px-4">
       <div className="w-full max-w-md">
-        
+
         {/* Header */}
         <div className="text-center mb-12">
           <div className="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -133,7 +134,7 @@ const SignUpPage = () => {
                 {apiError}
               </div>
             )}
-            
+
             {/* Full Name */}
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-3">
@@ -146,11 +147,10 @@ const SignUpPage = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className={`w-full pl-11 pr-4 py-3 border rounded-xl text-gray-900 placeholder-gray-400 transition-all duration-300 ${
-                    errors.name 
-                      ? "border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500" 
-                      : "border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  }`}
+                  className={`w-full pl-11 pr-4 py-3 border rounded-xl text-gray-900 placeholder-gray-400 transition-all duration-300 ${errors.name
+                    ? "border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                    : "border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    }`}
                   placeholder="Enter your full name"
                 />
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -172,11 +172,10 @@ const SignUpPage = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className={`w-full pl-11 pr-4 py-3 border rounded-xl text-gray-900 placeholder-gray-400 transition-all duration-300 ${
-                    errors.email 
-                      ? "border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500" 
-                      : "border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  }`}
+                  className={`w-full pl-11 pr-4 py-3 border rounded-xl text-gray-900 placeholder-gray-400 transition-all duration-300 ${errors.email
+                    ? "border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                    : "border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    }`}
                   placeholder="Enter your email"
                 />
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -198,11 +197,10 @@ const SignUpPage = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className={`w-full pl-11 pr-12 py-3 border rounded-xl text-gray-900 placeholder-gray-400 transition-all duration-300 ${
-                    errors.password 
-                      ? "border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500" 
-                      : "border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  }`}
+                  className={`w-full pl-11 pr-12 py-3 border rounded-xl text-gray-900 placeholder-gray-400 transition-all duration-300 ${errors.password
+                    ? "border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                    : "border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    }`}
                   placeholder="Create a password"
                 />
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -214,13 +212,13 @@ const SignUpPage = () => {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
-              
+
               {/* Password Strength Indicator */}
               {formData.password && (
                 <div className="mt-3">
                   <div className="flex items-center space-x-2 mb-2">
                     <div className="flex-1 bg-gray-200 rounded-full h-2">
-                      <div 
+                      <div
                         className={`h-2 rounded-full transition-all duration-300 ${strength.color}`}
                         style={{ width: `${(strength.strength / 3) * 100}%` }}
                       ></div>
@@ -231,7 +229,7 @@ const SignUpPage = () => {
                   </div>
                 </div>
               )}
-              
+
               {errors.password && (
                 <p className="mt-2 text-sm text-red-600">{errors.password}</p>
               )}
@@ -249,11 +247,10 @@ const SignUpPage = () => {
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className={`w-full pl-11 pr-12 py-3 border rounded-xl text-gray-900 placeholder-gray-400 transition-all duration-300 ${
-                    errors.confirmPassword 
-                      ? "border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500" 
-                      : "border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  }`}
+                  className={`w-full pl-11 pr-12 py-3 border rounded-xl text-gray-900 placeholder-gray-400 transition-all duration-300 ${errors.confirmPassword
+                    ? "border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                    : "border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    }`}
                   placeholder="Confirm your password"
                 />
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -289,11 +286,10 @@ const SignUpPage = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`w-full py-3 px-4 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 ${
-                isSubmitting
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-gray-900 hover:bg-gray-800 text-white"
-              }`}
+              className={`w-full py-3 px-4 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 ${isSubmitting
+                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                : "bg-gray-900 hover:bg-gray-800 text-white"
+                }`}
             >
               {isSubmitting ? (
                 <>
@@ -313,8 +309,8 @@ const SignUpPage = () => {
           <div className="mt-8 pt-6 border-t border-gray-100 text-center">
             <p className="text-gray-600 font-light">
               Already have an account?{" "}
-              <a 
-                href="/login" 
+              <a
+                href="/login"
                 className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
               >
                 Sign in

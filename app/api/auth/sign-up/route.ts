@@ -27,21 +27,23 @@ export async function POST(request: NextRequest) {
     })
 
     if (error) {
+      console.error('Supabase auth error:', error)
       return NextResponse.json(
         { error: error.message },
         { status: 400 }
       )
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: 'User created successfully. Please check your email to verify your account.',
       user: data.user,
       session: data.session
     })
   } catch (error: unknown) {
     console.error('Signup error:', error)
-    
+
     if (error instanceof z.ZodError) {
+      console.error('Validation error details:', JSON.stringify(error.issues, null, 2))
       return NextResponse.json(
         { error: 'Validation error', details: error.issues },
         { status: 400 }
@@ -49,11 +51,11 @@ export async function POST(request: NextRequest) {
     }
 
     let errorMessage = 'An internal server error occurred';
-    
+
     if (error instanceof Error) {
       errorMessage = error.message;
     }
-  
+
     return NextResponse.json(
       { error: errorMessage },
       { status: 500 }

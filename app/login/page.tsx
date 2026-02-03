@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { apiClient } from '@/app/lib/api';
 import { useRouter } from 'next/navigation';
 import GoogleSignInButton from '@/components/GoogleSignInButton';
 
@@ -18,16 +19,17 @@ const LoginPage = () => {
     event.preventDefault();
     setSubmitting(true);
     setError(null);
-    
+
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-      
+      const { data, error } = await apiClient.login(email, password);
+
       if (error) {
-        setError(error.message);
-      } else if (data.user) {
+        setError(error);
+      } else if (data && typeof data === 'object' && 'session' in data && (data as any).session) {
+        await supabase.auth.setSession((data as any).session);
+        router.push('/');
+      } else if (data && typeof data === 'object' && 'user' in data) {
+        // Fallback if session is missing but user is present (unlikely with accurate types)
         router.push('/');
       }
     } catch {

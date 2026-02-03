@@ -1,4 +1,6 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'
+const isServer = typeof window === 'undefined'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || (isServer ? 'http://localhost:3000/api' : '/api')
+import { supabase } from '@/lib/supabase'
 
 interface ApiResponse<T = unknown> {
   data?: T
@@ -22,7 +24,7 @@ class ApiClient {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     const url = `${API_BASE_URL}${endpoint}`
-    
+
     const headers: Record<string, string> = {
       'Content-Type': 'application/json'
     }
@@ -42,6 +44,14 @@ class ApiClient {
       }
     }
 
+    // Automatically get token from Supabase if not manually set
+    if (!this.token) {
+      const { data } = await supabase.auth.getSession()
+      if (data.session?.access_token) {
+        this.token = data.session.access_token
+      }
+    }
+
     if (this.token) {
       headers.Authorization = `Bearer ${this.token}`
     }
@@ -53,6 +63,12 @@ class ApiClient {
       })
 
       const data = await response.json()
+
+      // Handle 401 specifically
+      if (response.status === 401) {
+        // Optional: Trigger logout or redirect to login
+        console.error('Unauthorized access:', data.error || 'Unknown error')
+      }
 
       if (!response.ok) {
         return { error: data.error || 'Request failed' }
@@ -66,14 +82,14 @@ class ApiClient {
 
   // Auth endpoints
   async login(email: string, password: string) {
-    return this.request('/auth/login', {
+    return this.request<{ user: any; session: any }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password })
     })
   }
 
   async signup(email: string, password: string, username?: string, full_name?: string) {
-    return this.request('/auth/sign-up', {
+    return this.request<{ user: any; session: any }>('/auth/sign-up', {
       method: 'POST',
       body: JSON.stringify({ email, password, username, full_name })
     })
@@ -95,7 +111,7 @@ class ApiClient {
         }
       })
     }
-    
+
     const qs = searchParams.toString()
     return this.request(`/rides${qs ? `?${qs}` : ''}`)
   }
@@ -163,7 +179,7 @@ class ApiClient {
         }
       })
     }
-    
+
     return this.request(`/bookings?${searchParams.toString()}`)
   }
 
@@ -229,9 +245,9 @@ class ApiClient {
         }
       })
     }
-    
+
     return this.request(`/reviews?${searchParams.toString()}`)
   }
 }
 
-export const apiClient = new ApiClient() 
+export const apiClient = new ApiClient()

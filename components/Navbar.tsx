@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useSupabaseAuth } from '@/app/providers/SupabaseAuthProvider';
-import { Car, Menu, X, User, Plus, MapPin, Home, LogIn, LogOut, UserPlus } from "lucide-react";
+import { Car, Menu, X, User, Plus, MapPin, Home, LogIn, LogOut, UserPlus, Users } from "lucide-react";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -14,6 +14,7 @@ const Navbar = () => {
     { href: "/rides", label: "Find Rides", icon: MapPin },
     { href: "/create-ride", label: "Offer Ride", icon: Plus },
     { href: "/profile", label: "Profile", icon: User },
+    { href: "/about", label: "About", icon: Users },
   ];
 
   return (
@@ -100,11 +101,10 @@ const Navbar = () => {
         </div>
 
         {/* Mobile Menu */}
-        <div className={`md:hidden transition-all duration-300 ease-in-out ${
-          isOpen
-            ? 'max-h-96 opacity-100'
-            : 'max-h-0 opacity-0 overflow-hidden'
-        }`}>
+        <div className={`md:hidden transition-all duration-300 ease-in-out ${isOpen
+          ? 'max-h-96 opacity-100'
+          : 'max-h-0 opacity-0 overflow-hidden'
+          }`}>
           <div className="bg-white/95 backdrop-blur-sm border-t border-gray-100 shadow-lg">
             <div className="px-4 py-4 space-y-2">
               {navItems.map((item) => {

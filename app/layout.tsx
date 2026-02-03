@@ -2,6 +2,7 @@ import { SupabaseAuthProvider } from '../app/providers/SupabaseAuthProvider'
 import { LoadingProvider } from '../app/providers/LoadingProvider'
 import './globals.css'
 import Navbar from '../components/Navbar'
+import ContactUsModal from '../components/ContactUsModal'
 
 export default function RootLayout({
   children,
@@ -14,7 +15,10 @@ export default function RootLayout({
         <SupabaseAuthProvider>
           <LoadingProvider>
             <Navbar />
-            {children}
+            <div className="min-h-screen">
+              {children}
+            </div>
+            <ContactUsModal />
           </LoadingProvider>
         </SupabaseAuthProvider>
       </body>
