@@ -1,6 +1,7 @@
 const isServer = typeof window === 'undefined'
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || (isServer ? 'http://localhost:3000/api' : '/api')
 import { supabase } from '@/lib/supabase'
+import { User, Session } from '@supabase/supabase-js'
 
 interface ApiResponse<T = unknown> {
   data?: T
@@ -82,14 +83,14 @@ class ApiClient {
 
   // Auth endpoints
   async login(email: string, password: string) {
-    return this.request<{ user: any; session: any }>('/auth/login', {
+    return this.request<{ user: User; session: Session }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password })
     })
   }
 
   async signup(email: string, password: string, username?: string, full_name?: string) {
-    return this.request<{ user: any; session: any }>('/auth/sign-up', {
+    return this.request<{ user: User; session: Session }>('/auth/sign-up', {
       method: 'POST',
       body: JSON.stringify({ email, password, username, full_name })
     })

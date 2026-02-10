@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 export default function DebugPage() {
     const [status, setStatus] = useState<string>('Idle')
     const [error, setError] = useState<string | null>(null)
-    const [config, setConfig] = useState<any>(null)
+    const [config, setConfig] = useState<{ url?: string; keyLength?: number } | null>(null)
 
     useEffect(() => {
         // Check config on mount
@@ -20,12 +20,12 @@ export default function DebugPage() {
         setError(null)
         try {
             // Try a simple health check or fetch a public table (if strictly restricted, auth.getSession is better)
-            const { data, error } = await supabase.auth.getSession()
+            const { error } = await supabase.auth.getSession()
             if (error) throw error
             setStatus('Success! Connected to Supabase.')
-        } catch (err: any) {
+        } catch (err) {
             console.error('Connection failed:', err)
-            setError(err.message || 'Unknown error')
+            setError(err instanceof Error ? err.message : 'Unknown error')
             setStatus('Failed')
         }
     }
@@ -36,8 +36,8 @@ export default function DebugPage() {
             sessionStorage.clear()
             setStatus('Storage cleared. Please reload the page.')
             window.location.reload()
-        } catch (err: any) {
-            setError('Failed to clear storage: ' + err.message)
+        } catch (err) {
+            setError('Failed to clear storage: ' + (err instanceof Error ? err.message : String(err)))
         }
     }
 
@@ -79,7 +79,7 @@ export default function DebugPage() {
             </div>
 
             <div className="text-sm text-gray-500">
-                <p>If "Test Connection" fails with "Failed to fetch", it usually means:</p>
+                <p>If &quot;Test Connection&quot; fails with &quot;Failed to fetch&quot;, it usually means:</p>
                 <ul className="list-disc pl-5 mt-2 space-y-1">
                     <li>Your internet connection is unstable or blocking the Supabase domain.</li>
                     <li>The Supabase project is paused (check dashboard).</li>

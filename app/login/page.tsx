@@ -25,10 +25,10 @@ const LoginPage = () => {
 
       if (error) {
         setError(error);
-      } else if (data && typeof data === 'object' && 'session' in data && (data as any).session) {
-        await supabase.auth.setSession((data as any).session);
+      } else if (data?.session) {
+        await supabase.auth.setSession(data.session);
         router.push('/');
-      } else if (data && typeof data === 'object' && 'user' in data) {
+      } else if (data?.user) {
         // Fallback if session is missing but user is present (unlikely with accurate types)
         router.push('/');
       }

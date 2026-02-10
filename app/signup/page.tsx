@@ -25,7 +25,7 @@ const SignUpPage = () => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: value,
+      [name as keyof typeof formData]: value,
     });
     // Clear error when user starts typing
     if (errors[name]) {
@@ -87,7 +87,9 @@ const SignUpPage = () => {
       if (error) {
         setApiError(error);
       } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if (data && typeof data === 'object' && 'session' in data && (data as any).session) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           await supabase.auth.setSession((data as any).session);
         }
         router.push('/login');

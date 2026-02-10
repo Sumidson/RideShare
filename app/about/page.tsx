@@ -1,6 +1,6 @@
 "use client"
 import React from 'react';
-import { Shield, Users, Clock, Globe, Quote, ArrowRight, CheckCircle, Smartphone, Github, Twitter, Linkedin } from 'lucide-react';
+import { Shield, Users, Clock, Globe, ArrowRight, CheckCircle, Smartphone, Github, Twitter, Linkedin } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const sectionVariants = {
@@ -86,7 +86,7 @@ export default function AboutPage() {
                         className="mt-6 max-w-2xl mx-auto text-xl text-slate-600 leading-relaxed font-light"
                         variants={itemVariants}
                     >
-                        We're building a community-first platform that connects people, reduces carbon footprints, and makes travel efficient for everyone.
+                        We&apos;re building a community-first platform that connects people, reduces carbon footprints, and makes travel efficient for everyone.
                     </motion.p>
                 </div>
 
@@ -117,7 +117,7 @@ export default function AboutPage() {
                                         At RideShare, we believe that every empty seat is a wasted opportunity. Our mission is to transform the daily commute from a solitary grind into a shared experience.
                                     </p>
                                     <p>
-                                        By connecting drivers with empty seats to passengers heading the same way, we're creating a network that's smarter, friendlier, and better for the planet.
+                                        By connecting drivers with empty seats to passengers heading the same way, we&apos;re creating a network that&apos;s smarter, friendlier, and better for the planet.
                                     </p>
                                 </motion.div>
                                 <motion.div className="mt-10" variants={itemVariants}>
@@ -243,6 +243,7 @@ export default function AboutPage() {
                                 whileHover="hover"
                             >
                                 <div className="relative w-32 h-32 mx-auto mb-6">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img
                                         src={member.image}
                                         alt={member.name}

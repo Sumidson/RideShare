@@ -11,10 +11,7 @@ interface SignUpMetadata {
   [key: string]: string | undefined
 }
 
-interface ApiLoginResponse {
-  token?: string
-  user?: User
-}
+
 
 interface AuthResponse {
   data: { user?: User; session?: unknown } | null
@@ -57,7 +54,12 @@ export const useAuth = () => {
       setLoading(true)
       setError(null)
       const { data, error } = await apiClient.signup(email, password, metadata?.username, metadata?.full_name)
-      return { data: data as { user?: User; session?: unknown } | null, error: error ?? null }
+      // data is { user: User; session: Session }
+      // We need to return { user?: User (custom); session?: unknown }
+      return {
+        data: data ? { user: data.user as unknown as User, session: data.session } : null,
+        error: error ?? null
+      }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred'
       setError(errorMessage)
@@ -76,16 +78,24 @@ export const useAuth = () => {
         setError(error)
         return { data: null, error }
       }
-      if ((data as ApiLoginResponse)?.token) {
-        apiClient.setToken((data as ApiLoginResponse).token!)
+
+      // data is { user: User; session: Session } directly from ApiResponse<T>
+      if (data?.session?.access_token) {
+        const token = data.session.access_token;
+        apiClient.setToken(token)
         if (typeof window !== 'undefined') {
-          localStorage.setItem(LOCAL_STORAGE_TOKEN_KEY, (data as ApiLoginResponse).token!)
+          localStorage.setItem(LOCAL_STORAGE_TOKEN_KEY, token)
         }
       }
-      if ((data as ApiLoginResponse)?.user) {
-        setUser((data as ApiLoginResponse).user!)
+
+      if (data?.user) {
+        setUser(data.user as unknown as User)
       }
-      return { data: data as { user?: User; session?: unknown } | null, error: null }
+
+      return {
+        data: data ? { user: data.user as unknown as User, session: data.session } : null,
+        error: null
+      }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred'
       setError(errorMessage)

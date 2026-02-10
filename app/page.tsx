@@ -229,9 +229,9 @@ const ElegantRideshareLanding = () => {
           // Sort by closest departure time or creation? 
           // API returns ordered by departure_time 'asc'. 
           // Let's use that to show "Upcoming" or "Live" opportunities.
-          setRecentRides(data.slice(0, 4));
-        } else if (data && (data as any).data) { // Handle { data: [...] } case if supabaseApiClient wraps it variously
-          setRecentRides(((data as any).data as RideItem[]).slice(0, 4));
+          setRecentRides((data as RideItem[]).slice(0, 4));
+        } else if (data && typeof data === 'object' && 'data' in data) { // Handle { data: [...] } case if supabaseApiClient wraps it variously
+          setRecentRides(((data as { data: RideItem[] }).data).slice(0, 4));
         }
       } catch (error) {
         console.error("Failed to fetch rides for live activity", error);
@@ -482,19 +482,8 @@ const ElegantRideshareLanding = () => {
             {loading ? (
               <div className="text-center text-slate-500">Loading live activity...</div>
             ) : recentRides.length > 0 ? (
-              recentRides.map((ride, index) => {
-                const timeAgo = (dateString: string) => {
-                  const date = new Date(dateString);
-                  const now = new Date();
-                  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+              recentRides.map((ride) => {
 
-                  if (diffInSeconds < 60) return 'Just now';
-                  const diffInMinutes = Math.floor(diffInSeconds / 60);
-                  if (diffInMinutes < 60) return `${diffInMinutes} min ago`;
-                  const diffInHours = Math.floor(diffInMinutes / 60);
-                  if (diffInHours < 24) return `${diffInHours} hours ago`;
-                  return `${Math.floor(diffInHours / 24)} days ago`;
-                };
 
                 // Since we don't have 'created_at' in the fetched interface strictly (it might be there but let's assume departure for "upcoming"),
                 // Making it look like "Offered a ride..." implies creation. 
@@ -524,6 +513,7 @@ const ElegantRideshareLanding = () => {
                         transition={{ duration: 0.6 }}
                       >
                         {ride.driver?.avatar_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
                           <img src={ride.driver.avatar_url} alt={ride.driver.username} className="w-full h-full object-cover" />
                         ) : (
                           <span>{ride.driver?.full_name?.charAt(0) || ride.driver?.username?.charAt(0) || 'U'}</span>
