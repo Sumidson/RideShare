@@ -4,7 +4,8 @@ import { useParams, useRouter } from 'next/navigation'
 import { supabaseApiClient } from '@/app/lib/supabaseApiClient'
 import AuthGuard from '@/components/auth/AuthGuard'
 import { motion } from 'framer-motion'
-import { MapPin, Clock, User, Car, DollarSign, ArrowLeft } from 'lucide-react'
+import { MapPin, Clock, User, Car, DollarSign, ArrowLeft, Bookmark, BookmarkCheck } from 'lucide-react'
+import { addSavedRide, getSavedRidesFromStorage } from '@/app/lib/savedRides'
 
 interface Ride {
   id: string
@@ -30,6 +31,13 @@ export default function BookingDetailsPage() {
   const [rideLoading, setRideLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [ride, setRide] = useState<Ride | null>(null)
+  const [isSaved, setIsSaved] = useState(false)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsSaved(getSavedRidesFromStorage().some((s) => s.rideId === String(rideId)))
+    }
+  }, [rideId])
 
   useEffect(() => {
     const fetchRide = async () => {
@@ -72,6 +80,18 @@ export default function BookingDetailsPage() {
   }
 
   const totalPrice = ride ? seats * ride.price_per_seat : 0
+
+  const handleSaveForLater = () => {
+    if (!ride) return
+    const added = addSavedRide({
+      id: ride.id,
+      origin: ride.origin,
+      destination: ride.destination,
+      departure_time: ride.departure_time,
+      price_per_seat: ride.price_per_seat,
+    })
+    if (added) setIsSaved(true)
+  }
 
   if (rideLoading) {
     return (
@@ -172,6 +192,27 @@ export default function BookingDetailsPage() {
                     <p className="text-gray-900">{ride.description}</p>
                   </div>
                 )}
+
+                <div className="pt-4 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={handleSaveForLater}
+                    disabled={isSaved}
+                    className="flex items-center gap-2 text-slate-600 hover:text-slate-900 disabled:opacity-70 disabled:cursor-default transition-colors"
+                  >
+                    {isSaved ? (
+                      <>
+                        <BookmarkCheck className="h-5 w-5 text-slate-700 fill-slate-700" />
+                        <span>Saved for later</span>
+                      </>
+                    ) : (
+                      <>
+                        <Bookmark className="h-5 w-5" />
+                        <span>Save for later</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </motion.div>
 
