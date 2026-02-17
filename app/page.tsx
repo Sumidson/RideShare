@@ -288,24 +288,28 @@ const ElegantRideshareLanding = () => {
                 className="flex gap-4"
                 variants={itemVariants}
               >
-                <motion.button
-                  className="group bg-slate-900 text-white px-8 py-4 rounded-full font-semibold flex items-center gap-3 shadow-xl"
-                  whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(0,0,0,0.2)" }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <MapPin className="w-5 h-5" />
-                  Find a ride
-                </motion.button>
-                <motion.button
-                  className="group bg-white text-slate-900 border border-slate-300 px-8 py-4 rounded-full font-semibold flex items-center gap-3 shadow-lg"
-                  whileHover={{ scale: 1.05, backgroundColor: "#f8fafc" }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Plus className="w-5 h-5" />
-                  Offer a ride
-                </motion.button>
+                <Link href="/rides">
+                  <motion.span
+                    className="inline-flex items-center gap-3 bg-slate-900 text-white px-8 py-4 rounded-full font-semibold shadow-xl"
+                    whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(0,0,0,0.2)" }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <MapPin className="w-5 h-5" />
+                    Find a ride
+                  </motion.span>
+                </Link>
+                <Link href="/create-ride">
+                  <motion.span
+                    className="inline-flex items-center gap-3 bg-white text-slate-900 border border-slate-300 px-8 py-4 rounded-full font-semibold shadow-lg"
+                    whileHover={{ scale: 1.05, backgroundColor: "#f8fafc" }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Plus className="w-5 h-5" />
+                    Offer a ride
+                  </motion.span>
+                </Link>
               </motion.div>
             </motion.div>
 

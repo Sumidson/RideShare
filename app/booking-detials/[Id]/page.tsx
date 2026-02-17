@@ -248,7 +248,7 @@ export default function BookingDetailsPage() {
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-gray-600">Price per seat:</span>
-                    <span className="font-medium">${ride.price_per_seat}</span>
+                    <span className="font-medium">₹{ride.price_per_seat}</span>
                   </div>
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-gray-600">Seats selected:</span>
@@ -257,7 +257,7 @@ export default function BookingDetailsPage() {
                   <div className="border-t border-gray-200 pt-2">
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-semibold text-gray-900">Total:</span>
-                      <span className="text-2xl font-bold text-blue-600">${totalPrice}</span>
+                      <span className="text-2xl font-bold text-blue-600">₹{totalPrice}</span>
                     </div>
                   </div>
                 </div>

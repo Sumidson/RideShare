@@ -130,12 +130,17 @@ export default function SupportPage() {
       status: 'Open',
       createdAt: new Date().toISOString(),
     };
-    const next = [ticket, ...tickets];
-    setTickets(next);
-    saveTicketsToStorage(next);
+    setTickets((prev) => {
+      const next = [ticket, ...prev];
+      saveTicketsToStorage(next);
+      return next;
+    });
     setFormData({ email: formData.email, subject: '', message: '' });
     setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 3000);
+    setTimeout(() => {
+      setSubmitted(false);
+      document.getElementById('my-tickets')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 1500);
   };
 
   return (
@@ -164,7 +169,7 @@ export default function SupportPage() {
             className="text-xl text-slate-600 font-light max-w-2xl mx-auto"
             variants={itemVariants}
           >
-            Find answers and submit a support ticket. Tickets are stored locally in your browser.
+            Find answers and submit a support ticket.
           </motion.p>
         </motion.div>
 
@@ -249,7 +254,7 @@ export default function SupportPage() {
                     <CheckCircle className="w-10 h-10" />
                   </div>
                   <h3 className="text-2xl font-bold text-slate-900 mb-2">Ticket submitted</h3>
-                  <p className="text-slate-600">It has been saved to My tickets below (stored in this browser).</p>
+                  <p className="text-slate-600">It has been saved to My tickets below.</p>
                 </motion.div>
               ) : (
                 <motion.form
@@ -326,6 +331,7 @@ export default function SupportPage() {
 
         {/* My tickets */}
         <motion.section
+          id="my-tickets"
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.2 }}

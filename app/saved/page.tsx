@@ -123,7 +123,7 @@ export default function SavedPage() {
             Saved rides
           </h1>
           <p className="text-xl text-slate-600 font-light">
-            Rides you saved for later (stored in this browser)
+            Rides you saved for later
           </p>
         </motion.div>
 

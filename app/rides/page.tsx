@@ -259,7 +259,7 @@ const RidesPage = () => {
                     </div>
                     <div className="lg:col-span-3">
                       <div className="text-gray-900">Seats: {ride.available_seats}</div>
-                      <div className="text-gray-900">Price: ${ride.price_per_seat}</div>
+                      <div className="text-gray-900">Price: ₹{ride.price_per_seat}</div>
                     </div>
                     <div className="lg:col-span-2 text-right flex flex-col sm:flex-row items-end gap-2 justify-end">
                       <motion.button
