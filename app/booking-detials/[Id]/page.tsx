@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { supabaseApiClient } from '@/app/lib/supabaseApiClient'
 import AuthGuard from '@/components/auth/AuthGuard'
 import { motion } from 'framer-motion'
-import { MapPin, Clock, User, Car, DollarSign, ArrowLeft, Bookmark, BookmarkCheck } from 'lucide-react'
+import { MapPin, Clock, User, Car, IndianRupee, ArrowLeft, Bookmark, BookmarkCheck } from 'lucide-react'
 import { addSavedRide, getSavedRidesFromStorage } from '@/app/lib/savedRides'
 
 interface Ride {
@@ -223,7 +223,7 @@ export default function BookingDetailsPage() {
               className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100"
             >
               <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
-                <DollarSign className="h-5 w-5 text-green-600" />
+                <IndianRupee className="h-5 w-5 text-green-600" />
                 <span>Booking Details</span>
               </h2>
 
