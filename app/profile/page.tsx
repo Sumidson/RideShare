@@ -223,7 +223,7 @@ const ProfilePage = () => {
                 { label: 'Total Bookings', value: bookings.length, icon: Activity, color: 'blue' },
                 { label: 'Upcoming', value: upcomingBookings.length, icon: Calendar, color: 'green' },
                 { label: 'Completed', value: pastBookings.filter(b => b.status === 'COMPLETED').length, icon: Award, color: 'purple' },
-                { label: 'Total Spent', value: `$${bookings.reduce((sum, b) => sum + b.total_price, 0).toFixed(2)}`, icon: TrendingUp, color: 'orange' },
+                { label: 'Total Spent', value: `₹${bookings.reduce((sum, b) => sum + b.total_price, 0).toFixed(2)}`, icon: TrendingUp, color: 'orange' },
               ].map(stat => (
                 <motion.div
                   key={stat.label}
@@ -361,7 +361,7 @@ const ProfilePage = () => {
                                 <span className="ml-1">{booking.status}</span>
                               </span>
                               <p className="text-sm text-gray-600 mt-1">
-                                ${booking.total_price} ({booking.seats_booked} seats)
+                                ₹{booking.total_price} ({booking.seats_booked} seats)
                               </p>
                             </div>
                           </div>
@@ -409,7 +409,7 @@ const ProfilePage = () => {
                                 <span className="ml-1">{booking.status}</span>
                               </span>
                               <p className="text-sm text-gray-600 mt-1">
-                                ${booking.total_price} ({booking.seats_booked} seats)
+                                ₹{booking.total_price} ({booking.seats_booked} seats)
                               </p>
                             </div>
                           </div>

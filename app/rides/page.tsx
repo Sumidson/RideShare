@@ -7,8 +7,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search,
   ArrowRight,
-  ChevronDown
+  ChevronDown,
+  Bookmark,
+  BookmarkCheck,
 } from 'lucide-react';
+import { addSavedRide, getSavedRidesFromStorage } from '@/app/lib/savedRides';
 
 
 // 2. Define animation variants (similar to your landing page for a consistent feel)
@@ -71,6 +74,24 @@ const RidesPage = () => {
 
   const [rides, setRides] = useState<RideItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    setSavedIds(new Set(getSavedRidesFromStorage().map((s) => s.rideId)));
+  }, []);
+
+  const handleSaveRide = (e: React.MouseEvent, ride: RideItem) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const added = addSavedRide({
+      id: ride.id,
+      origin: ride.origin,
+      destination: ride.destination,
+      departure_time: ride.departure_time,
+      price_per_seat: ride.price_per_seat,
+    });
+    if (added) setSavedIds((prev) => new Set(prev).add(ride.id));
+  };
 
   useEffect(() => {
     const fetchRides = async () => {
@@ -238,12 +259,26 @@ const RidesPage = () => {
                     </div>
                     <div className="lg:col-span-3">
                       <div className="text-gray-900">Seats: {ride.available_seats}</div>
-                      <div className="text-gray-900">Price: ${ride.price_per_seat}</div>
+                      <div className="text-gray-900">Price: ₹{ride.price_per_seat}</div>
                     </div>
-                    <div className="lg:col-span-2 text-right">
+                    <div className="lg:col-span-2 text-right flex flex-col sm:flex-row items-end gap-2 justify-end">
+                      <motion.button
+                        type="button"
+                        onClick={(e) => handleSaveRide(e, ride)}
+                        className="p-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-slate-50 hover:border-slate-300 transition-colors"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.98 }}
+                        title={savedIds.has(ride.id) ? 'Saved' : 'Save for later'}
+                      >
+                        {savedIds.has(ride.id) ? (
+                          <BookmarkCheck className="w-5 h-5 text-slate-700 fill-slate-700" />
+                        ) : (
+                          <Bookmark className="w-5 h-5" />
+                        )}
+                      </motion.button>
                       <motion.button
                         onClick={() => handleBooking(ride.id)}
-                        className="w-full bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2"
+                        className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.98 }}
                       >
