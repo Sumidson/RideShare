@@ -13,9 +13,12 @@ const Navbar = () => {
     { href: "/", label: "Home", icon: Home },
     { href: "/rides", label: "Find Rides", icon: MapPin },
     { href: "/create-ride", label: "Offer Ride", icon: Plus },
+    { href: "/driver", label: "Driver Portal", icon: Car },
     { href: "/profile", label: "Profile", icon: User },
     { href: "/about", label: "About", icon: Users },
   ];
+
+  const desktopNavItems = navItems.filter((item) => item.href !== "/driver");
 
   return (
     <>
@@ -38,7 +41,7 @@ const Navbar = () => {
 
             {/* Desktop Menu */}
             <div className="hidden md:flex items-center space-x-1">
-              {navItems.map((item) => {
+              {desktopNavItems.map((item) => {
                 const IconComponent = item.icon;
                 return (
                   <Link
@@ -78,6 +81,15 @@ const Navbar = () => {
                   </button>
                 )}
               </div>
+
+              {/* Desktop Driver Portal (right-most) */}
+              <Link
+                href="/driver"
+                className="ml-4 flex items-center space-x-2 px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition-all duration-300 font-medium"
+              >
+                <Car className="w-4 h-4" />
+                <span>Driver Portal</span>
+              </Link>
             </div>
 
             {/* Mobile Menu Button */}

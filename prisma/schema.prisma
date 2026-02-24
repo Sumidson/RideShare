@@ -22,6 +22,15 @@ model User {
   role             UserRole  @default(USER)
   email_verified   Boolean   @default(false)
   is_verified      Boolean   @default(false)
+  // Driver profile fields
+  is_driver        Boolean   @default(false)
+  driver_verified  Boolean   @default(false)
+  car_make         String?
+  car_model        String?
+  car_year         Int?
+  car_color        String?
+  car_plate        String?
+  car_photo_url    String?
   created_at       DateTime  @default(now())
   updated_at       DateTime  @updatedAt
 
