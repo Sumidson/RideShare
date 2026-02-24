@@ -2,7 +2,6 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
 import {
   ShieldCheck,
   Users,
@@ -89,26 +88,16 @@ const AdminPage = () => {
       setLoading(true);
       setError(null);
 
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session?.access_token) {
-        router.push('/login');
-        return;
-      }
-
       try {
-        const res = await fetch('/api/admin/overview', {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        });
+        const res = await fetch('/api/admin/overview', { credentials: 'include' });
         const json = (await res.json()) as AdminOverviewResponse;
 
         if (!res.ok || json.error) {
           setError(json.error || 'Not authorized to view admin panel');
           setData(null);
+          if (res.status === 401 || res.status === 403) {
+            router.push('/admin/login');
+          }
         } else {
           setData(json);
         }
