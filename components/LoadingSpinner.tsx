@@ -16,8 +16,8 @@ const LoadingSpinner = () => {
           initial={{ x: -100, y: 0 }}
           animate={{ x: "100%", y: [0, -5, 0] }}
           transition={{
-            x: { duration: 2.5, repeat: Infinity, ease: "easeInOut" },
-            y: { duration: 0.5, repeat: Infinity, ease: "easeInOut" }
+            x: { duration: 2.5, repeat: Infinity, ease: "easeInOut" as const },
+            y: { duration: 0.5, repeat: Infinity, ease: "easeInOut" as const }
           }}
         >
           <Car className="w-10 h-10 text-blue-600 drop-shadow-lg" />
@@ -45,7 +45,7 @@ const LoadingSpinner = () => {
                 duration: 0.6,
                 repeat: Infinity,
                 delay: i * 0.2,
-                ease: "easeInOut"
+                ease: "easeInOut" as const
               }}
             />
           ))}

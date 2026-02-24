@@ -21,7 +21,7 @@ const sectionVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.8, ease: 'easeOut', staggerChildren: 0.2 },
+    transition: { duration: 0.8, ease: 'easeOut' as const, staggerChildren: 0.2 },
   },
 };
 
@@ -30,7 +30,7 @@ const itemVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.6, ease: 'easeOut' },
+    transition: { duration: 0.6, ease: 'easeOut' as const },
   },
 };
 
