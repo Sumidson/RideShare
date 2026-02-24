@@ -97,7 +97,8 @@ export default function SavedPage() {
       setSaved(next);
       saveRidesToStorage(next);
       setRideIdInput('');
-    } catch (err) {
+    } catch (error) {
+      console.error('Failed to fetch ride', error);
       setAddError('Failed to fetch ride');
     } finally {
       setAdding(false);

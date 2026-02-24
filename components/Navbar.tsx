@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useSupabaseAuth } from '@/app/providers/SupabaseAuthProvider';
-import { Car, Menu, X, User, Plus, MapPin, Home, LogIn, LogOut, UserPlus, Users } from "lucide-react";
+import { Car, User, Plus, MapPin, Home, LogIn, LogOut, UserPlus, Users } from "lucide-react";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -90,11 +90,26 @@ const Navbar = () => {
                 aria-expanded={isOpen}
               >
                 <span className="sr-only">Open main menu</span>
-                {!isOpen ? (
-                  <Menu className="h-6 w-6" />
-                ) : (
-                  <X className="h-6 w-6" />
-                )}
+                <span className="relative w-6 h-6 flex items-center justify-center">
+                  <span
+                    className={[
+                      "absolute h-0.5 w-6 bg-current rounded-full transition-transform duration-200 ease-out",
+                      isOpen ? "translate-y-0 rotate-45" : "-translate-y-2 rotate-0",
+                    ].join(" ")}
+                  />
+                  <span
+                    className={[
+                      "absolute h-0.5 w-6 bg-current rounded-full transition-all duration-200 ease-out",
+                      isOpen ? "opacity-0 scale-x-0" : "opacity-100 scale-x-100",
+                    ].join(" ")}
+                  />
+                  <span
+                    className={[
+                      "absolute h-0.5 w-6 bg-current rounded-full transition-transform duration-200 ease-out",
+                      isOpen ? "translate-y-0 -rotate-45" : "translate-y-2 rotate-0",
+                    ].join(" ")}
+                  />
+                </span>
               </button>
             </div>
           </div>

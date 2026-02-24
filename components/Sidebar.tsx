@@ -15,6 +15,11 @@ const sidebarRoutes = [
 export default function Sidebar() {
   const pathname = usePathname();
 
+  // Hide sidebar on the home page
+  if (pathname === '/') {
+    return null;
+  }
+
   return (
     <aside className="hidden md:block w-56 flex-shrink-0 border-r border-slate-200 bg-white/80 backdrop-blur-sm">
       <nav className="sticky top-16 p-4 space-y-1">
