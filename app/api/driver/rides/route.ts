@@ -55,8 +55,28 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    // Omit start_otp so driver never sees the OTP; only verified status is visible
-    const ridesForDriver = rides.map(({ start_otp: _otp, ...r }) => r)
+    // Omit start_otp so driver never sees OTP; build explicit objects for reliable response
+    const rideWithOtpFields = (r: (typeof rides)[0]) =>
+      r as (typeof r) & { started_at?: Date | null; otp_verified_at?: Date | null }
+    const ridesForDriver = rides.map((ride) => {
+      const r = rideWithOtpFields(ride)
+      return {
+        id: ride.id,
+        driver_id: ride.driver_id,
+        origin: ride.origin,
+        destination: ride.destination,
+        departure_time: ride.departure_time,
+        available_seats: ride.available_seats,
+        price_per_seat: ride.price_per_seat,
+        description: ride.description,
+        status: ride.status,
+        created_at: ride.created_at,
+        updated_at: ride.updated_at,
+        started_at: r.started_at,
+        otp_verified_at: r.otp_verified_at,
+        bookings: ride.bookings,
+      }
+    })
     return NextResponse.json({ rides: ridesForDriver })
   } catch (error) {
     console.error('Error fetching driver rides:', error)
