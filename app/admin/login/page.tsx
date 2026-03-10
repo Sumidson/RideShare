@@ -63,7 +63,7 @@ const AdminLoginPage = () => {
           Sign in with an admin account to access the dashboard.
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="admin-dark-form space-y-6">
           {error && (
             <div className="bg-red-500/10 border border-red-500/30 text-red-300 px-4 py-3 rounded-lg text-sm">
               {error}

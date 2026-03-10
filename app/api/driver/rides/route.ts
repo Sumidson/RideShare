@@ -55,7 +55,9 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    return NextResponse.json({ rides })
+    // Omit start_otp so driver never sees the OTP; only verified status is visible
+    const ridesForDriver = rides.map(({ start_otp: _otp, ...r }) => r)
+    return NextResponse.json({ rides: ridesForDriver })
   } catch (error) {
     console.error('Error fetching driver rides:', error)
     return NextResponse.json(

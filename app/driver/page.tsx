@@ -662,21 +662,18 @@ export default function DriverPage() {
                               </button>
                             </div>
                           )}
-                          {ride.status === 'IN_PROGRESS' && ride.start_otp && (
-                            <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-4">
-                              <p className="text-sm font-medium text-amber-900 mb-1">
-                                Ride OTP (share with passengers)
-                              </p>
-                              <p className="text-2xl font-mono font-bold text-amber-800 tracking-widest">
-                                {ride.start_otp}
+                          {ride.status === 'IN_PROGRESS' && (
+                            <div className="rounded-xl border border-slate-200 bg-white p-4">
+                              <p className="text-sm font-medium text-slate-700 mb-3">
+                                Ask a passenger to show their OTP, then enter it below to verify.
                               </p>
                               {!ride.otp_verified_at ? (
-                                <div className="mt-3 flex flex-wrap items-center gap-2">
+                                <div className="flex flex-wrap items-center gap-2">
                                   <input
                                     type="text"
                                     inputMode="numeric"
                                     maxLength={6}
-                                    placeholder="Enter OTP from passenger"
+                                    placeholder="Enter OTP"
                                     value={verifyOtpInput[ride.id] ?? ''}
                                     onChange={(e) =>
                                       setVerifyOtpInput((prev) => ({
@@ -684,7 +681,7 @@ export default function DriverPage() {
                                         [ride.id]: e.target.value.replace(/\D/g, ''),
                                       }))
                                     }
-                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm w-28 font-mono"
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm w-28 font-mono text-slate-900"
                                   />
                                   <button
                                     type="button"
@@ -699,7 +696,7 @@ export default function DriverPage() {
                                   </button>
                                 </div>
                               ) : (
-                                <p className="mt-2 text-sm text-emerald-700 font-medium flex items-center gap-1">
+                                <p className="text-sm text-emerald-700 font-medium flex items-center gap-1">
                                   <CheckCircle className="w-4 h-4" />
                                   Verified
                                 </p>

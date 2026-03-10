@@ -82,7 +82,9 @@ export async function POST(
       },
     })
 
-    return NextResponse.json({ otp, ride: updated })
+    // Do not send OTP to driver; they only verify using the passenger's screen
+    const { start_otp: _otp, ...rideWithoutOtp } = updated
+    return NextResponse.json({ ride: rideWithoutOtp })
   } catch (err) {
     console.error('Error starting ride:', err)
     return NextResponse.json(

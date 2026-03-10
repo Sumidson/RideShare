@@ -8,6 +8,7 @@ export async function GET(request: NextRequest) {
     const destination = searchParams.get('destination')
     const date = searchParams.get('date')
 
+    const now = new Date()
     const whereClause: Record<string, unknown> = {
       status: 'ACTIVE',
       available_seats: {
@@ -15,7 +16,21 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Add filters if provided
+    // Upcoming rides only: departure_time in the future (when no date filter)
+    if (date) {
+      const searchDate = new Date(date)
+      const nextDay = new Date(searchDate)
+      nextDay.setDate(nextDay.getDate() + 1)
+      whereClause.departure_time = {
+        gte: searchDate,
+        lt: nextDay
+      }
+    } else {
+      whereClause.departure_time = {
+        gte: now
+      }
+    }
+
     if (origin) {
       whereClause.origin = {
         contains: origin,
@@ -27,17 +42,6 @@ export async function GET(request: NextRequest) {
       whereClause.destination = {
         contains: destination,
         mode: 'insensitive'
-      }
-    }
-
-    if (date) {
-      const searchDate = new Date(date)
-      const nextDay = new Date(searchDate)
-      nextDay.setDate(nextDay.getDate() + 1)
-      
-      whereClause.departure_time = {
-        gte: searchDate,
-        lt: nextDay
       }
     }
 
