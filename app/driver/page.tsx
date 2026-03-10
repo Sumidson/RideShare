@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import AuthGuard from '@/components/auth/AuthGuard';
 import { supabase } from '@/lib/supabase';
+import { supabaseApiClient } from '@/app/lib/supabaseApiClient';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -107,6 +108,7 @@ export default function DriverPage() {
   const [startRideLoadingId, setStartRideLoadingId] = useState<string | null>(null);
   const [verifyOtpInput, setVerifyOtpInput] = useState<Record<string, string>>({});
   const [verifyOtpLoadingId, setVerifyOtpLoadingId] = useState<string | null>(null);
+  const [bookingUpdateLoadingId, setBookingUpdateLoadingId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -226,6 +228,34 @@ export default function DriverPage() {
       console.error(err);
     } finally {
       setVerifyOtpLoadingId(null);
+    }
+  };
+
+  const handleAcceptBooking = async (bookingId: string) => {
+    setBookingUpdateLoadingId(bookingId);
+    try {
+      const { error } = await supabaseApiClient.updateBooking(bookingId, { status: 'CONFIRMED' });
+      if (error) {
+        console.error(error);
+      } else {
+        await refetchRides();
+      }
+    } finally {
+      setBookingUpdateLoadingId(null);
+    }
+  };
+
+  const handleRejectBooking = async (bookingId: string) => {
+    setBookingUpdateLoadingId(bookingId);
+    try {
+      const { error } = await supabaseApiClient.updateBooking(bookingId, { status: 'CANCELLED' });
+      if (error) {
+        console.error(error);
+      } else {
+        await refetchRides();
+      }
+    } finally {
+      setBookingUpdateLoadingId(null);
     }
   };
 
@@ -547,6 +577,19 @@ export default function DriverPage() {
             </div>
           </motion.div>
 
+          {/* Your rides section - always show heading so the block is visible */}
+          <div className="mt-10">
+            <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <Car className="w-7 h-7 text-slate-600" />
+              Your rides
+              {!loading && rides.length > 0 && (
+                <span className="text-lg font-normal text-slate-500">
+                  ({rides.length} trip{rides.length !== 1 ? 's' : ''})
+                </span>
+              )}
+            </h2>
+          </div>
+
           {loading ? (
             <motion.div
               className="flex justify-center items-center py-20"
@@ -560,7 +603,7 @@ export default function DriverPage() {
               variants={itemVariants}
             >
               <Car className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-slate-900 mb-2">No rides yet</h2>
+              <h3 className="text-xl font-semibold text-slate-900 mb-2">No rides yet</h3>
               <p className="text-slate-600 mb-6">
                 Rides you offer will appear here with your passengers.
               </p>
@@ -740,10 +783,10 @@ export default function DriverPage() {
                                       </p>
                                     </div>
                                   </div>
-                                  <div className="text-right">
+                                  <div className="text-right flex flex-col items-end gap-2">
                                     <p className="text-slate-700 font-medium">
                                       {b.seats_booked} seat{b.seats_booked !== 1 ? 's' : ''} · ₹
-                                      {b.total_price.toFixed(0)}
+                                      {(Number(b.total_price) || 0).toFixed(0)}
                                     </p>
                                     <p
                                       className={`text-xs font-medium ${
@@ -756,6 +799,26 @@ export default function DriverPage() {
                                     >
                                       {b.status}
                                     </p>
+                                    {b.status === 'PENDING' && (
+                                      <div className="flex items-center gap-2 mt-1">
+                                        <button
+                                          type="button"
+                                          disabled={bookingUpdateLoadingId === b.id}
+                                          onClick={() => handleAcceptBooking(b.id)}
+                                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-50"
+                                        >
+                                          {bookingUpdateLoadingId === b.id ? '…' : 'Accept'}
+                                        </button>
+                                        <button
+                                          type="button"
+                                          disabled={bookingUpdateLoadingId === b.id}
+                                          onClick={() => handleRejectBooking(b.id)}
+                                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-200 text-slate-700 text-sm font-medium hover:bg-slate-300 disabled:opacity-50"
+                                        >
+                                          Reject
+                                        </button>
+                                      </div>
+                                    )}
                                   </div>
                                 </li>
                               ))}

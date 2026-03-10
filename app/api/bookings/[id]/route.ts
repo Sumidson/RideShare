@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
-import { verifyJWT } from '@/app/lib/auth'
 import { z } from 'zod'
 
 const updateBookingSchema = z.object({
   status: z.enum(['PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED'])
 })
+
+async function getUserFromToken(token: string | null) {
+  if (!token) return null
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  const { createClient } = await import('@supabase/supabase-js')
+  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  })
+  const { data: { user }, error } = await supabase.auth.getUser()
+  return error || !user ? null : user
+}
 
 export async function GET(
   request: NextRequest,
@@ -14,18 +25,10 @@ export async function GET(
   try {
     const { id } = await params
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
-    
-    if (!token) {
+    const user = await getUserFromToken(token ?? null)
+    if (!user) {
       return NextResponse.json(
         { error: 'Authentication required' },
-        { status: 401 }
-      )
-    }
-
-    const decoded = verifyJWT(token)
-    if (!decoded?.userId) {
-      return NextResponse.json(
-        { error: 'Invalid token' },
         { status: 401 }
       )
     }
@@ -67,7 +70,7 @@ export async function GET(
     }
 
     // Check if user is authorized to view this booking
-    if (booking.passenger_id !== decoded.userId && booking.ride.driver_id !== decoded.userId) {
+    if (booking.passenger_id !== user.id && booking.ride.driver_id !== user.id) {
       return NextResponse.json(
         { error: 'Not authorized to view this booking' },
         { status: 403 }
@@ -91,18 +94,10 @@ export async function PUT(
   try {
     const { id } = await params
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
-    
-    if (!token) {
+    const user = await getUserFromToken(token ?? null)
+    if (!user) {
       return NextResponse.json(
         { error: 'Authentication required' },
-        { status: 401 }
-      )
-    }
-
-    const decoded = verifyJWT(token)
-    if (!decoded?.userId) {
-      return NextResponse.json(
-        { error: 'Invalid token' },
         { status: 401 }
       )
     }
@@ -136,7 +131,7 @@ export async function PUT(
     }
 
     // Only the driver can confirm/cancel bookings
-    if (booking.ride.driver_id !== decoded.userId) {
+    if (booking.ride.driver_id !== user.id) {
       return NextResponse.json(
         { error: 'Only the driver can update booking status' },
         { status: 403 }
@@ -215,18 +210,10 @@ export async function DELETE(
   try {
     const { id } = await params
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
-    
-    if (!token) {
+    const user = await getUserFromToken(token ?? null)
+    if (!user) {
       return NextResponse.json(
         { error: 'Authentication required' },
-        { status: 401 }
-      )
-    }
-
-    const decoded = verifyJWT(token)
-    if (!decoded?.userId) {
-      return NextResponse.json(
-        { error: 'Invalid token' },
         { status: 401 }
       )
     }
@@ -247,7 +234,7 @@ export async function DELETE(
     }
 
     // Only the passenger can cancel their own booking
-    if (booking.passenger_id !== decoded.userId) {
+    if (booking.passenger_id !== user.id) {
       return NextResponse.json(
         { error: 'Not authorized to cancel this booking' },
         { status: 403 }
