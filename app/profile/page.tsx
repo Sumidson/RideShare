@@ -65,6 +65,8 @@ interface Booking {
     origin: string;
     destination: string;
     departure_time: string;
+    status?: string;
+    start_otp?: string | null;
     driver: {
       id: string;
       username?: string;
@@ -348,6 +350,12 @@ const ProfilePage = () => {
                               <h3 className="font-medium text-gray-900">
                                 {booking.ride.origin} → {booking.ride.destination}
                               </h3>
+                              {booking.ride.status === 'IN_PROGRESS' && booking.ride.start_otp && (
+                                <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 inline-block">
+                                  <p className="text-xs font-medium text-amber-800">Show driver this OTP</p>
+                                  <p className="text-lg font-mono font-bold text-amber-900 tracking-widest">{booking.ride.start_otp}</p>
+                                </div>
+                              )}
                               <p className="text-sm text-gray-600">
                                 {new Date(booking.ride.departure_time).toLocaleString()}
                               </p>
@@ -396,6 +404,12 @@ const ProfilePage = () => {
                               <h3 className="font-medium text-gray-900">
                                 {booking.ride.origin} → {booking.ride.destination}
                               </h3>
+                              {booking.ride.status === 'IN_PROGRESS' && booking.ride.start_otp && (
+                                <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 inline-block">
+                                  <p className="text-xs font-medium text-amber-800">Show driver this OTP</p>
+                                  <p className="text-lg font-mono font-bold text-amber-900 tracking-widest">{booking.ride.start_otp}</p>
+                                </div>
+                              )}
                               <p className="text-sm text-gray-600">
                                 {new Date(booking.ride.departure_time).toLocaleString()}
                               </p>

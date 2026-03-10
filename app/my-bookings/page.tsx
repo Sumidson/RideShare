@@ -51,6 +51,8 @@ interface Booking {
     origin: string;
     destination: string;
     departure_time: string;
+    status?: string;
+    start_otp?: string | null;
     driver: {
       id: string;
       username?: string;
@@ -181,6 +183,20 @@ export default function MyBookingsPage() {
                             {booking.ride.origin} → {booking.ride.destination}
                           </span>
                         </div>
+                        {booking.ride.status === 'IN_PROGRESS' && booking.ride.start_otp && (
+                          <div
+                            className="mb-3 rounded-xl border-2 border-amber-200 bg-amber-50 px-4 py-2 inline-block"
+                            onClick={(e) => e.preventDefault()}
+                            role="presentation"
+                          >
+                            <p className="text-xs font-medium text-amber-800 mb-0.5">
+                              Show driver this OTP
+                            </p>
+                            <p className="text-xl font-mono font-bold text-amber-900 tracking-widest">
+                              {booking.ride.start_otp}
+                            </p>
+                          </div>
+                        )}
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-slate-600 text-sm">
                           <span className="flex items-center gap-1">
                             <Calendar className="w-4 h-4" />

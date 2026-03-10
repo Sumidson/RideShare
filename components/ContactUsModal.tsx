@@ -1,9 +1,11 @@
 "use client"
 import React, { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { MessageSquare, X, Send, Mail, AlertCircle, MessageCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ContactUsModal() {
+    const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
     const [formData, setFormData] = useState({
         email: '',
@@ -12,6 +14,8 @@ export default function ContactUsModal() {
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
+
+    if (pathname?.startsWith('/admin')) return null;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

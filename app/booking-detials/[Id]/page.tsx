@@ -15,6 +15,8 @@ interface Ride {
   available_seats: number
   price_per_seat: number
   description?: string
+  status?: string
+  start_otp?: string | null
   driver?: {
     full_name?: string
     username?: string
@@ -185,6 +187,13 @@ export default function BookingDetailsPage() {
                     </p>
                   </div>
                 </div>
+
+                {ride.status === 'IN_PROGRESS' && ride.start_otp && (
+                  <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-4">
+                    <p className="text-sm font-medium text-amber-800 mb-1">Show driver this OTP</p>
+                    <p className="text-2xl font-mono font-bold text-amber-900 tracking-widest">{ride.start_otp}</p>
+                  </div>
+                )}
 
                 {ride.description && (
                   <div className="pt-4 border-t border-gray-200">

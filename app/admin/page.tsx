@@ -10,7 +10,22 @@ import {
   User as UserIcon,
   MapPin,
   Calendar,
+  Ticket,
+  Ban,
+  XCircle,
+  MessageSquare,
+  BookOpen,
 } from 'lucide-react';
+
+// Ticket type for contact/support list
+interface AdminTicket {
+  id: string;
+  email: string;
+  subject: string;
+  message: string;
+  status: 'Open' | 'In Progress' | 'Resolved';
+  createdAt: string;
+}
 
 interface AdminUser {
   id: string;
@@ -76,11 +91,23 @@ interface AdminOverviewResponse {
   error?: string;
 }
 
+// Sample tickets for demo
+const MOCK_TICKETS: AdminTicket[] = [
+  { id: 't1', email: 'user@example.com', subject: 'Payment issue', message: 'I was charged twice for my last ride.', status: 'Open', createdAt: new Date(Date.now() - 86400000).toISOString() },
+  { id: 't2', email: 'driver@test.com', subject: 'Account verification', message: 'When will my driver account be verified?', status: 'In Progress', createdAt: new Date(Date.now() - 172800000).toISOString() },
+  { id: 't3', email: 'rider@mail.com', subject: 'Cancel booking', message: 'Need to cancel my booking for tomorrow.', status: 'Resolved', createdAt: new Date(Date.now() - 259200000).toISOString() },
+];
+
 const AdminPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<AdminOverviewResponse | null>(null);
   const [search, setSearch] = useState('');
+  const [tickets, setTickets] = useState<AdminTicket[]>(MOCK_TICKETS);
+  const [cancelledRideIds, setCancelledRideIds] = useState<Set<string>>(new Set());
+  const [blockedRideIds, setBlockedRideIds] = useState<Set<string>>(new Set());
+  const [blockedUserIds, setBlockedUserIds] = useState<Set<string>>(new Set());
+  const [cancelledBookingIds, setCancelledBookingIds] = useState<Set<string>>(new Set());
   const router = useRouter();
 
   useEffect(() => {
@@ -188,6 +215,38 @@ const AdminPage = () => {
   const totalUsers = data.users.length;
   const totalRides = data.rides.length;
   const totalBookings = data.bookings.length;
+  const openTickets = tickets.filter((t) => t.status !== 'Resolved').length;
+
+  const updateTicketStatus = (id: string, status: AdminTicket['status']) => {
+    setTickets((prev) => prev.map((t) => (t.id === id ? { ...t, status } : t)));
+  };
+
+  const cancelRide = (rideId: string) => {
+    setCancelledRideIds((prev) => new Set(prev).add(rideId));
+  };
+  const blockRide = (rideId: string) => {
+    setBlockedRideIds((prev) => new Set(prev).add(rideId));
+  };
+  const unblockRide = (rideId: string) => {
+    setBlockedRideIds((prev) => {
+      const next = new Set(prev);
+      next.delete(rideId);
+      return next;
+    });
+  };
+  const blockUser = (userId: string) => {
+    setBlockedUserIds((prev) => new Set(prev).add(userId));
+  };
+  const unblockUser = (userId: string) => {
+    setBlockedUserIds((prev) => {
+      const next = new Set(prev);
+      next.delete(userId);
+      return next;
+    });
+  };
+  const cancelBooking = (bookingId: string) => {
+    setCancelledBookingIds((prev) => new Set(prev).add(bookingId));
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-gray-50 to-slate-200">
@@ -199,7 +258,7 @@ const AdminPage = () => {
               Admin Panel
             </h1>
             <p className="text-sm text-slate-600 mt-1">
-              Overview of all users, rides, and bookings.
+              Overview of users, rides, bookings, and tickets.
             </p>
           </div>
           <div className="relative w-full sm:w-80">
@@ -215,7 +274,7 @@ const AdminPage = () => {
         </header>
 
         {/* Summary cards */}
-        <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center">
               <Users className="w-5 h-5" />
@@ -236,12 +295,65 @@ const AdminPage = () => {
           </div>
           <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-900 flex items-center justify-center">
-              <Users className="w-5 h-5" />
+              <BookOpen className="w-5 h-5" />
             </div>
             <div>
               <p className="text-xs uppercase tracking-wide text-slate-500">Bookings</p>
               <p className="text-xl font-semibold text-slate-900">{totalBookings}</p>
             </div>
+          </div>
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center">
+              <Ticket className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-500">Open tickets</p>
+              <p className="text-xl font-semibold text-slate-900">{openTickets}</p>
+            </div>
+          </div>
+        </section>
+
+        {/* Tickets (contact/support) */}
+        <section className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 space-y-3">
+          <h2 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+            <MessageSquare className="w-4 h-4 text-slate-500" />
+            Tickets (contact & support)
+          </h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-left text-xs text-slate-700">
+              <thead>
+                <tr className="border-b border-slate-100 text-slate-500">
+                  <th className="py-2 pr-4 font-medium">Email</th>
+                  <th className="py-2 pr-4 font-medium">Subject</th>
+                  <th className="py-2 pr-4 font-medium">Message</th>
+                  <th className="py-2 pr-4 font-medium">Date</th>
+                  <th className="py-2 pr-4 font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tickets.map((t) => (
+                  <tr key={t.id} className="border-b border-slate-50 last:border-0">
+                    <td className="py-2 pr-4 text-slate-600">{t.email}</td>
+                    <td className="py-2 pr-4 font-medium">{t.subject}</td>
+                    <td className="py-2 pr-4 max-w-[200px] truncate">{t.message}</td>
+                    <td className="py-2 pr-4 text-slate-500">
+                      {new Date(t.createdAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
+                    </td>
+                    <td className="py-2 pr-4">
+                      <select
+                        value={t.status}
+                        onChange={(e) => updateTicketStatus(t.id, e.target.value as AdminTicket['status'])}
+                        className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-slate-700 focus:outline-none focus:ring-1 focus:ring-slate-300"
+                      >
+                        <option value="Open">Open</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Resolved">Resolved</option>
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </section>
 
@@ -306,7 +418,7 @@ const AdminPage = () => {
         <section className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 space-y-3">
           <h2 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
             <Car className="w-4 h-4 text-slate-500" />
-            Recent rides
+            Rides
           </h2>
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-xs text-slate-700">
@@ -317,53 +429,157 @@ const AdminPage = () => {
                   <th className="py-2 pr-4 font-medium">Driver</th>
                   <th className="py-2 pr-4 font-medium">Seats</th>
                   <th className="py-2 pr-4 font-medium">Status</th>
+                  <th className="py-2 pr-4 font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {data.rides.slice(0, 20).map((ride) => (
-                  <tr key={ride.id} className="border-b border-slate-50 last:border-0">
-                    <td className="py-2 pr-4">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-3 h-3 text-slate-500" />
-                        <span>
-                          {ride.origin} → {ride.destination}
+                {data.rides.slice(0, 20).map((ride) => {
+                  const isCancelled = cancelledRideIds.has(ride.id);
+                  const isBlocked = blockedRideIds.has(ride.id);
+                  const displayStatus = isBlocked ? 'Blocked' : isCancelled ? 'Cancelled' : ride.status;
+                  return (
+                    <tr key={ride.id} className="border-b border-slate-50 last:border-0">
+                      <td className="py-2 pr-4">
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-3 h-3 text-slate-500" />
+                          <span>
+                            {ride.origin} → {ride.destination}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-2 pr-4">
+                        <div className="flex items-center gap-1 text-xs">
+                          <Calendar className="w-3 h-3 text-slate-500" />
+                          <span>
+                            {new Date(ride.departure_time).toLocaleString(undefined, {
+                              dateStyle: 'short',
+                              timeStyle: 'short',
+                            })}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-2 pr-4">
+                        <span className="text-xs">
+                          {ride.driver?.full_name || ride.driver?.username || ride.driver?.email || '—'}
                         </span>
-                      </div>
-                    </td>
-                    <td className="py-2 pr-4">
-                      <div className="flex items-center gap-1 text-xs">
-                        <Calendar className="w-3 h-3 text-slate-500" />
-                        <span>
-                          {new Date(ride.departure_time).toLocaleString(undefined, {
-                            dateStyle: 'short',
-                            timeStyle: 'short',
-                          })}
+                      </td>
+                      <td className="py-2 pr-4 text-xs">
+                        {ride.available_seats} seats · {ride._count.bookings} bookings
+                      </td>
+                      <td className="py-2 pr-4 text-xs">
+                        <span
+                          className={`inline-flex px-2 py-0.5 rounded-full ${
+                            displayStatus === 'Blocked'
+                              ? 'bg-red-50 text-red-700'
+                              : displayStatus === 'Cancelled'
+                              ? 'bg-slate-100 text-slate-600'
+                              : displayStatus === 'ACTIVE'
+                              ? 'bg-emerald-50 text-emerald-700'
+                              : displayStatus === 'COMPLETED'
+                              ? 'bg-slate-50 text-slate-700'
+                              : 'bg-amber-50 text-amber-700'
+                          }`}
+                        >
+                          {displayStatus}
                         </span>
-                      </div>
-                    </td>
-                    <td className="py-2 pr-4">
-                      <span className="text-xs">
-                        {ride.driver?.full_name || ride.driver?.username || ride.driver?.email || '—'}
-                      </span>
-                    </td>
-                    <td className="py-2 pr-4 text-xs">
-                      {ride.available_seats} seats · {ride._count.bookings} bookings
-                    </td>
-                    <td className="py-2 pr-4 text-xs">
-                      <span
-                        className={`inline-flex px-2 py-0.5 rounded-full ${
-                          ride.status === 'ACTIVE'
-                            ? 'bg-emerald-50 text-emerald-700'
-                            : ride.status === 'COMPLETED'
-                            ? 'bg-slate-50 text-slate-700'
-                            : 'bg-amber-50 text-amber-700'
-                        }`}
-                      >
-                        {ride.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="py-2 pr-4">
+                        <div className="flex items-center gap-1 flex-wrap">
+                          {!isCancelled && (
+                            <button
+                              type="button"
+                              onClick={() => cancelRide(ride.id)}
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs"
+                            >
+                              <XCircle className="w-3 h-3" />
+                              Cancel
+                            </button>
+                          )}
+                          {isBlocked ? (
+                            <button
+                              type="button"
+                              onClick={() => unblockRide(ride.id)}
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200 text-xs"
+                            >
+                              Unblock
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => blockRide(ride.id)}
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 text-xs"
+                            >
+                              <Ban className="w-3 h-3" />
+                              Block
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {/* Bookings */}
+        <section className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 space-y-3">
+          <h2 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+            <BookOpen className="w-4 h-4 text-slate-500" />
+            Bookings
+          </h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-left text-xs text-slate-700">
+              <thead>
+                <tr className="border-b border-slate-100 text-slate-500">
+                  <th className="py-2 pr-4 font-medium">Ride</th>
+                  <th className="py-2 pr-4 font-medium">Passenger</th>
+                  <th className="py-2 pr-4 font-medium">Seats · Total</th>
+                  <th className="py-2 pr-4 font-medium">Status</th>
+                  <th className="py-2 pr-4 font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.bookings.slice(0, 25).map((b) => {
+                  const isCancelled = cancelledBookingIds.has(b.id);
+                  return (
+                    <tr key={b.id} className="border-b border-slate-50 last:border-0">
+                      <td className="py-2 pr-4">
+                        <span className="text-xs">
+                          {b.ride?.origin} → {b.ride?.destination}
+                        </span>
+                      </td>
+                      <td className="py-2 pr-4 text-xs">
+                        {b.passenger?.full_name || b.passenger?.username || b.passenger?.email || '—'}
+                      </td>
+                      <td className="py-2 pr-4 text-xs">
+                        {b.seats_booked} · ₹{b.total_price}
+                      </td>
+                      <td className="py-2 pr-4 text-xs">
+                        <span
+                          className={`inline-flex px-2 py-0.5 rounded-full ${
+                            isCancelled ? 'bg-slate-100 text-slate-600' : 'bg-slate-50 text-slate-700'
+                          }`}
+                        >
+                          {isCancelled ? 'Cancelled' : b.status}
+                        </span>
+                      </td>
+                      <td className="py-2 pr-4">
+                        {!isCancelled && (
+                          <button
+                            type="button"
+                            onClick={() => cancelBooking(b.id)}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs"
+                          >
+                            <XCircle className="w-3 h-3" />
+                            Cancel
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -384,26 +600,55 @@ const AdminPage = () => {
                   <th className="py-2 pr-4 font-medium">Role</th>
                   <th className="py-2 pr-4 font-medium">Rides</th>
                   <th className="py-2 pr-4 font-medium">Rating</th>
+                  <th className="py-2 pr-4 font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {data.users.slice(0, 50).map((u) => (
-                  <tr key={u.id} className="border-b border-slate-50 last:border-0">
-                    <td className="py-2 pr-4">
-                      <span className="text-xs font-medium">
-                        {u.full_name || u.username || 'User'}
-                      </span>
-                    </td>
-                    <td className="py-2 pr-4 text-xs text-slate-500">{u.email}</td>
-                    <td className="py-2 pr-4 text-xs">
-                      <span className="inline-flex px-2 py-0.5 rounded-full bg-slate-50 text-slate-700 uppercase tracking-wide">
-                        {u.role}
-                      </span>
-                    </td>
-                    <td className="py-2 pr-4 text-xs">{u.total_rides}</td>
-                    <td className="py-2 pr-4 text-xs">{u.rating.toFixed(1)}</td>
-                  </tr>
-                ))}
+                {data.users.slice(0, 50).map((u) => {
+                  const isBlocked = blockedUserIds.has(u.id);
+                  return (
+                    <tr key={u.id} className={`border-b border-slate-50 last:border-0 ${isBlocked ? 'bg-red-50/50' : ''}`}>
+                      <td className="py-2 pr-4">
+                        <span className="text-xs font-medium">
+                          {u.full_name || u.username || 'User'}
+                        </span>
+                        {isBlocked && (
+                          <span className="ml-1 inline-flex px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-xs">
+                            Blocked
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-2 pr-4 text-xs text-slate-500">{u.email}</td>
+                      <td className="py-2 pr-4 text-xs">
+                        <span className="inline-flex px-2 py-0.5 rounded-full bg-slate-50 text-slate-700 uppercase tracking-wide">
+                          {u.role}
+                        </span>
+                      </td>
+                      <td className="py-2 pr-4 text-xs">{u.total_rides}</td>
+                      <td className="py-2 pr-4 text-xs">{u.rating.toFixed(1)}</td>
+                      <td className="py-2 pr-4">
+                        {isBlocked ? (
+                          <button
+                            type="button"
+                            onClick={() => unblockUser(u.id)}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200 text-xs"
+                          >
+                            Unblock
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => blockUser(u.id)}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 text-xs"
+                          >
+                            <Ban className="w-3 h-3" />
+                            Block
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

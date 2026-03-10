@@ -76,6 +76,9 @@ interface DriverRide {
   status: string;
   description: string | null;
   bookings: BookingWithPassenger[];
+  start_otp?: string | null;
+  started_at?: string | null;
+  otp_verified_at?: string | null;
 }
 
 interface DriverProfile {
@@ -101,6 +104,9 @@ export default function DriverPage() {
   const [rides, setRides] = useState<DriverRide[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedRideId, setExpandedRideId] = useState<string | null>(null);
+  const [startRideLoadingId, setStartRideLoadingId] = useState<string | null>(null);
+  const [verifyOtpInput, setVerifyOtpInput] = useState<Record<string, string>>({});
+  const [verifyOtpLoadingId, setVerifyOtpLoadingId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -157,6 +163,71 @@ export default function DriverPage() {
     };
     fetchData();
   }, []);
+
+  const refetchRides = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) return;
+    try {
+      const res = await fetch('/api/driver/rides', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      const data = await res.json();
+      if (res.ok && data.rides) setRides(data.rides);
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleStartRide = async (rideId: string) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) return;
+    setStartRideLoadingId(rideId);
+    try {
+      const res = await fetch(`/api/driver/rides/${rideId}/start`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      const data = await res.json();
+      if (res.ok && data.ride) {
+        setRides((prev) => prev.map((r) => (r.id === rideId ? data.ride : r)));
+      } else {
+        console.error(data.error || 'Failed to start ride');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setStartRideLoadingId(null);
+    }
+  };
+
+  const handleVerifyOtp = async (rideId: string) => {
+    const otp = (verifyOtpInput[rideId] ?? '').trim();
+    if (!otp) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) return;
+    setVerifyOtpLoadingId(rideId);
+    try {
+      const res = await fetch(`/api/driver/rides/${rideId}/verify-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ otp }),
+      });
+      const data = await res.json();
+      if (res.ok && data.verified) {
+        await refetchRides();
+        setVerifyOtpInput((prev) => ({ ...prev, [rideId]: '' }));
+      } else {
+        console.error(data.error || 'Invalid OTP');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setVerifyOtpLoadingId(null);
+    }
+  };
 
   const handleProfileChange = (
     field: keyof DriverProfile,
@@ -541,9 +612,11 @@ export default function DriverPage() {
                           className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
                             ride.status === 'ACTIVE'
                               ? 'bg-emerald-100 text-emerald-800'
-                              : ride.status === 'COMPLETED'
-                                ? 'bg-slate-100 text-slate-700'
-                                : 'bg-slate-100 text-slate-600'
+                              : ride.status === 'IN_PROGRESS'
+                                ? 'bg-amber-100 text-amber-800'
+                                : ride.status === 'COMPLETED'
+                                  ? 'bg-slate-100 text-slate-700'
+                                  : 'bg-slate-100 text-slate-600'
                           }`}
                         >
                           {ride.status}
@@ -571,7 +644,68 @@ export default function DriverPage() {
                         transition={{ duration: 0.3 }}
                         className="overflow-hidden border-t border-slate-100"
                       >
-                        <div className="p-6 bg-slate-50/80">
+                        <div className="p-6 bg-slate-50/80 space-y-6">
+                          {/* Start ride / OTP / Verify */}
+                          {ride.status === 'ACTIVE' && ride.bookings.length > 0 && (
+                            <div className="flex flex-wrap items-center gap-3">
+                              <button
+                                type="button"
+                                disabled={startRideLoadingId === ride.id}
+                                onClick={() => handleStartRide(ride.id)}
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white font-medium hover:bg-emerald-700 disabled:opacity-50"
+                              >
+                                {startRideLoadingId === ride.id ? (
+                                  <>Starting…</>
+                                ) : (
+                                  <>Start ride</>
+                                )}
+                              </button>
+                            </div>
+                          )}
+                          {ride.status === 'IN_PROGRESS' && ride.start_otp && (
+                            <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-4">
+                              <p className="text-sm font-medium text-amber-900 mb-1">
+                                Ride OTP (share with passengers)
+                              </p>
+                              <p className="text-2xl font-mono font-bold text-amber-800 tracking-widest">
+                                {ride.start_otp}
+                              </p>
+                              {!ride.otp_verified_at ? (
+                                <div className="mt-3 flex flex-wrap items-center gap-2">
+                                  <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    maxLength={6}
+                                    placeholder="Enter OTP from passenger"
+                                    value={verifyOtpInput[ride.id] ?? ''}
+                                    onChange={(e) =>
+                                      setVerifyOtpInput((prev) => ({
+                                        ...prev,
+                                        [ride.id]: e.target.value.replace(/\D/g, ''),
+                                      }))
+                                    }
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm w-28 font-mono"
+                                  />
+                                  <button
+                                    type="button"
+                                    disabled={
+                                      verifyOtpLoadingId === ride.id ||
+                                      (verifyOtpInput[ride.id] ?? '').length !== 6
+                                    }
+                                    onClick={() => handleVerifyOtp(ride.id)}
+                                    className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-slate-800 text-white text-sm font-medium hover:bg-slate-900 disabled:opacity-50"
+                                  >
+                                    {verifyOtpLoadingId === ride.id ? 'Verifying…' : 'Verify OTP'}
+                                  </button>
+                                </div>
+                              ) : (
+                                <p className="mt-2 text-sm text-emerald-700 font-medium flex items-center gap-1">
+                                  <CheckCircle className="w-4 h-4" />
+                                  Verified
+                                </p>
+                              )}
+                            </div>
+                          )}
                           <h3 className="text-sm font-semibold text-slate-700 mb-3 uppercase tracking-wide">
                             Passengers
                           </h3>

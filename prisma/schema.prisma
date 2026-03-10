@@ -68,6 +68,9 @@ model Ride {
   status          RideStatus @default(ACTIVE)
   created_at      DateTime   @default(now())
   updated_at      DateTime   @updatedAt
+  start_otp       String?
+  started_at      DateTime?
+  otp_verified_at DateTime?
 
   // Relations
   driver   User      @relation("DriverRides", fields: [driver_id], references: [id], onDelete: Cascade)
