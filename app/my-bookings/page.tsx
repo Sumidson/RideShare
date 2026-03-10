@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import {
   Calendar,
   MapPin,
@@ -15,30 +14,6 @@ import {
 } from 'lucide-react';
 import AuthGuard from '@/components/auth/AuthGuard';
 import { supabaseApiClient } from '@/app/lib/supabaseApiClient';
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08 },
-  },
-};
-
-const itemVariants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: { duration: 0.5, ease: 'easeOut' as const },
-  },
-};
-
-const cardHoverVariant = {
-  hover: {
-    scale: 1.02,
-    transition: { duration: 0.2 },
-  },
-};
 
 interface Booking {
   id: string;

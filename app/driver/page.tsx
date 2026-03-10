@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Car,
   MapPin,
@@ -20,36 +19,6 @@ import {
 import AuthGuard from '@/components/auth/AuthGuard';
 import { supabase } from '@/lib/supabase';
 import { supabaseApiClient } from '@/app/lib/supabaseApiClient';
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08 },
-  },
-};
-
-const itemVariants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: { duration: 0.5, ease: 'easeOut' as const },
-  },
-};
-
-const cardVariants = {
-  hidden: { opacity: 0, scale: 0.98 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    transition: { duration: 0.4 },
-  },
-  hover: {
-    scale: 1.01,
-    transition: { duration: 0.2 },
-  },
-};
 
 interface Passenger {
   id: string;
@@ -322,16 +291,8 @@ export default function DriverPage() {
   return (
     <AuthGuard redirectTo="/driver/login">
       <div className="min-h-screen bg-gradient-to-br from-slate-100 via-gray-50 to-slate-200">
-        <motion.div
-          className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          <motion.div
-            className="flex flex-col gap-6 mb-10"
-            variants={itemVariants}
-          >
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col gap-6 mb-10">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <h1 className="text-4xl font-bold text-slate-900 mb-2">
@@ -575,9 +536,9 @@ export default function DriverPage() {
                 </button>
               </div>
             </div>
-          </motion.div>
+          </div>
 
-          {/* Your rides section - always show heading so the block is visible */}
+          {/* Your rides section */}
           <div className="mt-10">
             <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
               <Car className="w-7 h-7 text-slate-600" />
@@ -591,17 +552,11 @@ export default function DriverPage() {
           </div>
 
           {loading ? (
-            <motion.div
-              className="flex justify-center items-center py-20"
-              variants={itemVariants}
-            >
+            <div className="flex justify-center items-center py-20">
               <div className="animate-spin rounded-full h-12 w-12 border-2 border-slate-300 border-t-slate-700" />
-            </motion.div>
+            </div>
           ) : rides.length === 0 ? (
-            <motion.div
-              className="bg-white rounded-2xl shadow-lg border border-slate-200 p-12 text-center"
-              variants={itemVariants}
-            >
+            <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-12 text-center">
               <Car className="w-16 h-16 text-slate-300 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-slate-900 mb-2">No rides yet</h3>
               <p className="text-slate-600 mb-6">
@@ -614,31 +569,25 @@ export default function DriverPage() {
                 <Plus className="w-5 h-5" />
                 Offer a ride
               </Link>
-            </motion.div>
+            </div>
           ) : (
-            <motion.div
-              className="space-y-4"
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-            >
+            <div className="space-y-4">
               {rides.map((ride) => (
-                <motion.div
+                <div
                   key={ride.id}
-                  variants={cardVariants}
-                  className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden"
+                  className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden text-slate-900"
                 >
                   <button
                     type="button"
-                    className="w-full p-6 text-left flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/50 transition-colors"
+                    className="w-full p-6 text-left flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/50 transition-colors text-slate-900"
                     onClick={() =>
                       setExpandedRideId(expandedRideId === ride.id ? null : ride.id)
                     }
                   >
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 text-slate-900 font-semibold mb-2">
-                        <MapPin className="w-5 h-5 text-slate-600 flex-shrink-0" />
-                        <span>
+                      <div className="flex items-center gap-2 font-semibold mb-2 text-slate-900">
+                        <MapPin className="w-5 h-5 text-slate-600 shrink-0" />
+                        <span className="text-slate-900">
                           {ride.origin} → {ride.destination}
                         </span>
                       </div>
@@ -666,8 +615,8 @@ export default function DriverPage() {
                         </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className="text-slate-600 text-sm">
+                    <div className="flex items-center gap-2 shrink-0 text-slate-700">
+                      <span className="text-sm">
                         {ride.bookings.length} passenger{ride.bookings.length !== 1 ? 's' : ''}
                       </span>
                       {expandedRideId === ride.id ? (
@@ -678,16 +627,9 @@ export default function DriverPage() {
                     </div>
                   </button>
 
-                  <AnimatePresence>
-                    {expandedRideId === ride.id && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="overflow-hidden border-t border-slate-100"
-                      >
-                        <div className="p-6 bg-slate-50/80 space-y-6">
+                  {expandedRideId === ride.id && (
+                    <div className="border-t border-slate-100">
+                      <div className="p-6 bg-slate-50/80 space-y-6">
                           {/* Start ride / OTP / Verify */}
                           {ride.status === 'ACTIVE' && ride.bookings.length > 0 && (
                             <div className="flex flex-wrap items-center gap-3">
@@ -825,14 +767,13 @@ export default function DriverPage() {
                             </ul>
                           )}
                         </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
+                      </div>
+                  )}
+                </div>
               ))}
-            </motion.div>
+            </div>
           )}
-        </motion.div>
+        </div>
       </div>
     </AuthGuard>
   );
