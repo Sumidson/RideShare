@@ -258,7 +258,7 @@ const ProfilePage = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`relative flex-1 flex items-center justify-center space-x-2 px-4 py-3 rounded-xl font-semibold transition-colors ${activeTab === tab.id ? 'text-white' : 'text-gray-600 hover:bg-gray-100'
+                  className={`relative flex-1 flex items-center justify-center gap-2 px-3 sm:px-4 py-3 rounded-xl font-semibold transition-colors min-w-0 ${activeTab === tab.id ? 'text-white' : 'text-slate-700 hover:bg-slate-100'
                     }`}
                 >
                   {activeTab === tab.id && (
@@ -268,8 +268,8 @@ const ProfilePage = () => {
                       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                     />
                   )}
-                  <tab.icon className="h-4 w-4 z-10" />
-                  <span className="hidden sm:inline z-10">{tab.label}</span>
+                  <tab.icon className="h-4 w-4 shrink-0 z-10" />
+                  <span className="inline z-10 text-left truncate">{tab.label}</span>
                 </button>
               ))}
             </div>
@@ -327,15 +327,15 @@ const ProfilePage = () => {
               )}
 
               {activeTab === 'upcoming' && (
-                <motion.div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100" variants={itemVariants}>
-                  <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
-                    <Calendar className="h-5 w-5" />
+                <motion.div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200" variants={itemVariants}>
+                  <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                    <Calendar className="h-5 w-5 text-slate-700" />
                     <span>Upcoming Rides ({upcomingBookings.length})</span>
                   </h2>
                   {loading ? (
-                    <div className="text-center py-8">Loading...</div>
+                    <div className="text-center py-8 text-slate-600">Loading...</div>
                   ) : upcomingBookings.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">No upcoming rides</div>
+                    <div className="text-center py-8 text-slate-600">No upcoming rides</div>
                   ) : (
                     <motion.div className="space-y-4" variants={containerVariants}>
                       {upcomingBookings.map((booking) => (
@@ -343,11 +343,11 @@ const ProfilePage = () => {
                           key={booking.id}
                           variants={{ ...itemVariants, ...cardHoverVariant }}
                           whileHover="hover"
-                          className="border border-gray-200 rounded-xl p-4 transition-shadow hover:shadow-md"
+                          className="border border-slate-200 rounded-xl p-4 transition-shadow hover:shadow-md bg-slate-50/50"
                         >
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="font-medium text-gray-900">
+                          <div className="flex justify-between items-start gap-4">
+                            <div className="min-w-0">
+                              <h3 className="font-semibold text-slate-900">
                                 {booking.ride.origin} → {booking.ride.destination}
                               </h3>
                               {booking.ride.status === 'IN_PROGRESS' && booking.ride.start_otp && (
@@ -356,20 +356,20 @@ const ProfilePage = () => {
                                   <p className="text-lg font-mono font-bold text-amber-900 tracking-widest">{booking.ride.start_otp}</p>
                                 </div>
                               )}
-                              <p className="text-sm text-gray-600">
+                              <p className="text-sm text-slate-600 mt-1">
                                 {new Date(booking.ride.departure_time).toLocaleString()}
                               </p>
-                              <p className="text-sm text-gray-600">
-                                Driver: {booking.ride.driver.full_name || booking.ride.driver.username || 'Unknown'}
+                              <p className="text-sm text-slate-600">
+                                Driver: {booking.ride.driver?.full_name || booking.ride.driver?.username || 'Unknown'}
                               </p>
                             </div>
-                            <div className="text-right">
+                            <div className="text-right shrink-0">
                               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
                                 {getStatusIcon(booking.status)}
                                 <span className="ml-1">{booking.status}</span>
                               </span>
-                              <p className="text-sm text-gray-600 mt-1">
-                                ₹{booking.total_price} ({booking.seats_booked} seats)
+                              <p className="text-sm text-slate-700 mt-1 font-medium">
+                                ₹{Number(booking.total_price).toFixed(0)} ({booking.seats_booked} seats)
                               </p>
                             </div>
                           </div>
