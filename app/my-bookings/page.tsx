@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import {
   Calendar,
   MapPin,
@@ -11,9 +12,35 @@ import {
   XCircle,
   AlertCircle,
   Car,
+  MessageCircle,
 } from 'lucide-react';
 import AuthGuard from '@/components/auth/AuthGuard';
 import { supabaseApiClient } from '@/app/lib/supabaseApiClient';
+import { useRouter } from 'next/navigation';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08 },
+  },
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: { duration: 0.5, ease: 'easeOut' as const },
+  },
+};
+
+const cardHoverVariant = {
+  hover: {
+    scale: 1.02,
+    transition: { duration: 0.2 },
+  },
+};
 
 interface Booking {
   id: string;
@@ -71,6 +98,7 @@ function getStatusIcon(status: string) {
 export default function MyBookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -200,6 +228,18 @@ export default function MyBookingsPage() {
                             {booking.seats_booked} seat{booking.seats_booked !== 1 ? 's' : ''}
                           </p>
                         </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            router.push(`/chat/${booking.id}`);
+                          }}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 text-slate-700 px-3 py-1.5 text-sm hover:bg-slate-200"
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                          Chat
+                        </button>
                         <ChevronRight className="w-5 h-5 text-slate-400" />
                       </div>
                     </div>

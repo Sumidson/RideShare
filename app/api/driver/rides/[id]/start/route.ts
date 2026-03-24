@@ -83,6 +83,7 @@ export async function POST(
     })
 
     // Do not send OTP to driver; they only verify using the passenger's screen
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- intentionally removing start_otp from response
     const { start_otp: _otp, ...rideWithoutOtp } = updated
     return NextResponse.json({ ride: rideWithoutOtp })
   } catch (err) {

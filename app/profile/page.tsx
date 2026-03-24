@@ -1,6 +1,5 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Clock,
   Calendar,
@@ -17,42 +16,13 @@ import {
   Activity,
   Lock,
   MessageCircle,
-  User
+  User,
+  MessageSquare
 } from 'lucide-react';
 import { useSupabaseAuth } from '@/app/providers/SupabaseAuthProvider';
 import { supabaseApiClient } from '@/app/lib/supabaseApiClient';
 import AuthGuard from '@/components/auth/AuthGuard';
 import { useRouter } from 'next/navigation';
-
-// Animation variants for consistency across the app
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.08
-    }
-  }
-};
-
-const itemVariants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: {
-      duration: 0.5,
-      ease: "easeOut" as const
-    }
-  }
-};
-
-const cardHoverVariant = {
-  hover: {
-    scale: 1.03,
-    transition: { duration: 0.2 }
-  }
-};
 
 interface Booking {
   id: string;
@@ -142,35 +112,21 @@ const ProfilePage = () => {
   return (
     <AuthGuard>
       <div className="min-h-screen bg-gradient-to-br from-slate-100 via-gray-50 to-slate-200">
-        <motion.div
-          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Profile Header */}
-          <motion.div
-            variants={itemVariants}
-            className="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-8 border border-gray-100"
-          >
+          <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-8 border border-gray-100">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6">
               <div className="flex items-center space-x-6 mb-4 md:mb-0">
                 <div className="relative">
-                  <motion.div
-                    className="w-24 h-24 bg-gradient-to-r from-slate-600 to-slate-800 rounded-full flex items-center justify-center text-4xl text-white"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ duration: 0.5, type: 'spring' }}
-                  >
+                  <div className="w-24 h-24 bg-gradient-to-r from-slate-600 to-slate-800 rounded-full flex items-center justify-center text-4xl text-white">
                     {(user.user_metadata?.full_name || user.user_metadata?.username || user.email)?.[0]?.toUpperCase()}
-                  </motion.div>
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
+                  </div>
+                  <button
+                    type="button"
                     className="absolute -top-2 -right-2 bg-slate-700 rounded-full p-2 text-white hover:bg-slate-800 transition-colors shadow-md border-2 border-white"
                   >
                     <Camera className="h-3 w-3" />
-                  </motion.button>
+                  </button>
                 </div>
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900 mb-1">
@@ -195,59 +151,49 @@ const ProfilePage = () => {
                 </div>
               </div>
               <div className="flex space-x-3">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                <button
+                  type="button"
                   onClick={() => router.push('/reviews')}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-semibold flex items-center space-x-2 transition-colors"
                 >
                   <MessageCircle className="h-4 w-4" />
                   <span>View Reviews</span>
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                </button>
+                <button
+                  type="button"
                   onClick={() => setIsEditing(!isEditing)}
                   className="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-xl font-semibold flex items-center space-x-2 transition-colors"
                 >
                   <Edit3 className="h-4 w-4" />
                   <span>Edit Profile</span>
-                </motion.button>
+                </button>
               </div>
             </div>
 
             {/* Stats Cards */}
-            <motion.div
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
-              variants={containerVariants}
-            >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               {[
                 { label: 'Total Bookings', value: bookings.length, icon: Activity, color: 'blue' },
                 { label: 'Upcoming', value: upcomingBookings.length, icon: Calendar, color: 'green' },
                 { label: 'Completed', value: pastBookings.filter(b => b.status === 'COMPLETED').length, icon: Award, color: 'purple' },
                 { label: 'Total Spent', value: `₹${bookings.reduce((sum, b) => sum + b.total_price, 0).toFixed(2)}`, icon: TrendingUp, color: 'orange' },
               ].map(stat => (
-                <motion.div
+                <div
                   key={stat.label}
                   className="bg-gradient-to-r from-slate-50 to-gray-100 p-4 rounded-xl border border-slate-100"
-                  variants={{ ...itemVariants, ...cardHoverVariant }}
-                  whileHover="hover"
                 >
                   <div className="flex items-center space-x-2 text-slate-800 font-semibold">
                     <stat.icon className="h-5 w-5 text-blue-500" />
                     <span>{stat.label}</span>
                   </div>
                   <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
-                </motion.div>
+                </div>
               ))}
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
 
           {/* Tab Navigation */}
-          <motion.div
-            variants={itemVariants}
-            className="bg-white rounded-2xl shadow-lg p-2 mb-8 border border-gray-100"
-          >
+          <div className="bg-white rounded-2xl shadow-lg p-2 mb-8 border border-gray-100">
             <div className="flex space-x-1 relative">
               {[
                 { id: 'overview', label: 'Overview', icon: User },
@@ -258,36 +204,21 @@ const ProfilePage = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`relative flex-1 flex items-center justify-center gap-2 px-3 sm:px-4 py-3 rounded-xl font-semibold transition-colors min-w-0 ${activeTab === tab.id ? 'text-white' : 'text-slate-700 hover:bg-slate-100'
+                  className={`relative flex-1 flex items-center justify-center gap-2 px-3 sm:px-4 py-3 rounded-xl font-semibold transition-colors min-w-0 ${activeTab === tab.id ? 'text-white bg-slate-800' : 'text-slate-700 hover:bg-slate-100'
                     }`}
                 >
-                  {activeTab === tab.id && (
-                    <motion.div
-                      layoutId="activeTabPill"
-                      className="absolute inset-0 bg-slate-800 rounded-xl z-0"
-                      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                    />
-                  )}
-                  <tab.icon className="h-4 w-4 shrink-0 z-10" />
-                  <span className="inline z-10 text-left truncate">{tab.label}</span>
+                  <tab.icon className="h-4 w-4 shrink-0" />
+                  <span className="inline text-left truncate">{tab.label}</span>
                 </button>
               ))}
             </div>
-          </motion.div>
+          </div>
 
           {/* Tab Content */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              exit="hidden"
-              className="space-y-6"
-            >
+          <div className="space-y-6">
               {activeTab === 'overview' && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  <motion.div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100" variants={itemVariants}>
+                  <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
                     <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
                       <User className="h-5 w-5" />
                       <span>Personal Information</span>
@@ -306,8 +237,8 @@ const ProfilePage = () => {
                         <p className="text-gray-900">{user.user_metadata?.username || 'Not provided'}</p>
                       </div>
                     </div>
-                  </motion.div>
-                  <motion.div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100" variants={itemVariants}>
+                  </div>
+                  <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
                     <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
                       <Settings className="h-5 w-5" />
                       <span>Account Status</span>
@@ -322,12 +253,12 @@ const ProfilePage = () => {
                         <p className="text-gray-900">{new Date(user.created_at).toLocaleDateString()}</p>
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 </div>
               )}
 
               {activeTab === 'upcoming' && (
-                <motion.div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200" variants={itemVariants}>
+                <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-200">
                   <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
                     <Calendar className="h-5 w-5 text-slate-700" />
                     <span>Upcoming Rides ({upcomingBookings.length})</span>
@@ -337,12 +268,10 @@ const ProfilePage = () => {
                   ) : upcomingBookings.length === 0 ? (
                     <div className="text-center py-8 text-slate-600">No upcoming rides</div>
                   ) : (
-                    <motion.div className="space-y-4" variants={containerVariants}>
+                    <div className="space-y-4">
                       {upcomingBookings.map((booking) => (
-                        <motion.div
+                        <div
                           key={booking.id}
-                          variants={{ ...itemVariants, ...cardHoverVariant }}
-                          whileHover="hover"
                           className="border border-slate-200 rounded-xl p-4 transition-shadow hover:shadow-md bg-slate-50/50"
                         >
                           <div className="flex justify-between items-start gap-4">
@@ -371,17 +300,25 @@ const ProfilePage = () => {
                               <p className="text-sm text-slate-700 mt-1 font-medium">
                                 ₹{Number(booking.total_price).toFixed(0)} ({booking.seats_booked} seats)
                               </p>
+                              <button
+                                type="button"
+                                onClick={() => router.push(`/chat/${booking.id}`)}
+                                className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-slate-100 text-slate-700 px-3 py-1.5 text-sm hover:bg-slate-200"
+                              >
+                                <MessageSquare className="h-4 w-4" />
+                                Chat
+                              </button>
                             </div>
                           </div>
-                        </motion.div>
+                        </div>
                       ))}
-                    </motion.div>
+                    </div>
                   )}
-                </motion.div>
+                </div>
               )}
 
               {activeTab === 'history' && (
-                <motion.div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100" variants={itemVariants}>
+                <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
                   <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
                     <Clock className="h-5 w-5" />
                     <span>Ride History ({pastBookings.length})</span>
@@ -391,12 +328,10 @@ const ProfilePage = () => {
                   ) : pastBookings.length === 0 ? (
                     <div className="text-center py-8 text-gray-500">No ride history</div>
                   ) : (
-                    <motion.div className="space-y-4" variants={containerVariants}>
+                    <div className="space-y-4">
                       {pastBookings.map((booking) => (
-                        <motion.div
+                        <div
                           key={booking.id}
-                          variants={{ ...itemVariants, ...cardHoverVariant }}
-                          whileHover="hover"
                           className="border border-gray-200 rounded-xl p-4 transition-shadow hover:shadow-md"
                         >
                           <div className="flex justify-between items-start">
@@ -425,36 +360,43 @@ const ProfilePage = () => {
                               <p className="text-sm text-gray-600 mt-1">
                                 ₹{booking.total_price} ({booking.seats_booked} seats)
                               </p>
+                              <button
+                                type="button"
+                                onClick={() => router.push(`/chat/${booking.id}`)}
+                                className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-slate-100 text-slate-700 px-3 py-1.5 text-sm hover:bg-slate-200"
+                              >
+                                <MessageSquare className="h-4 w-4" />
+                                Chat
+                              </button>
                             </div>
                           </div>
-                        </motion.div>
+                        </div>
                       ))}
-                    </motion.div>
+                    </div>
                   )}
-                </motion.div>
+                </div>
               )}
 
               {activeTab === 'settings' && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  <motion.div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100" variants={itemVariants}>
+                  <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
                     <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
                       <Settings className="h-5 w-5" />
                       <span>Account Settings</span>
                     </h2>
                     <p className="text-gray-600">Profile editing functionality coming soon...</p>
-                  </motion.div>
-                  <motion.div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100" variants={itemVariants}>
+                  </div>
+                  <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
                     <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
                       <Lock className="h-5 w-5" />
                       <span>Security</span>
                     </h2>
                     <p className="text-gray-600">Security settings coming soon...</p>
-                  </motion.div>
+                  </div>
                 </div>
               )}
-            </motion.div>
-          </AnimatePresence>
-        </motion.div>
+          </div>
+        </div>
       </div>
     </AuthGuard>
   );

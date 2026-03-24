@@ -40,6 +40,8 @@ model User {
   bookings_as_passenger Booking[] @relation("PassengerBookings")
   reviews_given         Review[]  @relation("Reviewer")
   reviews_received      Review[]  @relation("ReviewedUser")
+  messages_sent         ChatMessage[] @relation("MessageSender")
+  messages_received     ChatMessage[] @relation("MessageReceiver")
 
   @@map("users")
 }
@@ -93,8 +95,25 @@ model Booking {
   // Relations
   ride      Ride @relation(fields: [ride_id], references: [id], onDelete: Cascade)
   passenger User @relation("PassengerBookings", fields: [passenger_id], references: [id], onDelete: Cascade)
+  messages  ChatMessage[]
 
   @@map("bookings")
+}
+
+model ChatMessage {
+  id          String   @id @default(uuid())
+  booking_id  String
+  sender_id   String
+  receiver_id String
+  message     String
+  created_at  DateTime @default(now())
+
+  booking  Booking @relation(fields: [booking_id], references: [id], onDelete: Cascade)
+  sender   User    @relation("MessageSender", fields: [sender_id], references: [id], onDelete: Cascade)
+  receiver User    @relation("MessageReceiver", fields: [receiver_id], references: [id], onDelete: Cascade)
+
+  @@index([booking_id, created_at])
+  @@map("chat_messages")
 }
 
 model Review {

@@ -15,6 +15,7 @@ import {
   Phone,
   CheckCircle,
   AlertTriangle,
+  MessageCircle,
 } from 'lucide-react';
 import AuthGuard from '@/components/auth/AuthGuard';
 import { supabase } from '@/lib/supabase';
@@ -628,8 +629,8 @@ export default function DriverPage() {
                   </button>
 
                   {expandedRideId === ride.id && (
-                    <div className="border-t border-slate-100">
-                      <div className="p-6 bg-slate-50/80 space-y-6">
+                        <div className="border-t border-slate-100">
+                        <div className="p-6 bg-slate-50/80 space-y-6">
                           {/* Start ride / OTP / Verify */}
                           {ride.status === 'ACTIVE' && ride.bookings.length > 0 && (
                             <div className="flex flex-wrap items-center gap-3">
@@ -761,13 +762,20 @@ export default function DriverPage() {
                                         </button>
                                       </div>
                                     )}
+                                    <Link
+                                      href={`/chat/${b.id}`}
+                                      className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 text-slate-700 px-3 py-1.5 text-sm hover:bg-slate-200"
+                                    >
+                                      <MessageCircle className="w-4 h-4" />
+                                      Chat
+                                    </Link>
                                   </div>
                                 </li>
                               ))}
                             </ul>
                           )}
                         </div>
-                      </div>
+                        </div>
                   )}
                 </div>
               ))}

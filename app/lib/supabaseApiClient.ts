@@ -151,6 +151,17 @@ class SupabaseApiClient {
     })
   }
 
+  async getBookingMessages(bookingId: string) {
+    return this.request(`/bookings/${bookingId}/messages`)
+  }
+
+  async sendBookingMessage(bookingId: string, data: { message: string }) {
+    return this.request(`/bookings/${bookingId}/messages`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
   // User profile endpoints
   async getProfile() {
     return this.request('/users/profile')
