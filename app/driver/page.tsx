@@ -34,6 +34,7 @@ interface BookingWithPassenger {
   seats_booked: number;
   total_price: number;
   status: string;
+  passenger_confirmed_completed_at?: string | null;
   passenger: Passenger;
 }
 
@@ -50,6 +51,7 @@ interface DriverRide {
   start_otp?: string | null;
   started_at?: string | null;
   otp_verified_at?: string | null;
+  driver_marked_complete_at?: string | null;
 }
 
 interface DriverProfile {
@@ -79,6 +81,7 @@ export default function DriverPage() {
   const [verifyOtpInput, setVerifyOtpInput] = useState<Record<string, string>>({});
   const [verifyOtpLoadingId, setVerifyOtpLoadingId] = useState<string | null>(null);
   const [bookingUpdateLoadingId, setBookingUpdateLoadingId] = useState<string | null>(null);
+  const [completeRideLoadingId, setCompleteRideLoadingId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -226,6 +229,20 @@ export default function DriverPage() {
       }
     } finally {
       setBookingUpdateLoadingId(null);
+    }
+  };
+
+  const handleCompleteRide = async (rideId: string) => {
+    setCompleteRideLoadingId(rideId);
+    try {
+      const { error } = await supabaseApiClient.markRideCompleteByDriver(rideId);
+      if (error) {
+        console.error(error);
+      } else {
+        await refetchRides();
+      }
+    } finally {
+      setCompleteRideLoadingId(null);
     }
   };
 
@@ -682,10 +699,26 @@ export default function DriverPage() {
                                   </button>
                                 </div>
                               ) : (
-                                <p className="text-sm text-emerald-700 font-medium flex items-center gap-1">
-                                  <CheckCircle className="w-4 h-4" />
-                                  Verified
-                                </p>
+                                <div className="flex flex-wrap items-center gap-3">
+                                  <p className="text-sm text-emerald-700 font-medium flex items-center gap-1">
+                                    <CheckCircle className="w-4 h-4" />
+                                    Verified
+                                  </p>
+                                  {!ride.driver_marked_complete_at ? (
+                                    <button
+                                      type="button"
+                                      disabled={completeRideLoadingId === ride.id}
+                                      onClick={() => handleCompleteRide(ride.id)}
+                                      className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                                    >
+                                      {completeRideLoadingId === ride.id ? 'Marking…' : 'Mark ride complete'}
+                                    </button>
+                                  ) : (
+                                    <span className="text-sm text-blue-700 font-medium">
+                                      Waiting for passenger confirmation
+                                    </span>
+                                  )}
+                                </div>
                               )}
                             </div>
                           )}
@@ -771,6 +804,14 @@ export default function DriverPage() {
                                       <MessageCircle className="w-4 h-4" />
                                       Chat
                                     </Link>
+                                    {b.status === 'COMPLETED' && (
+                                      <Link
+                                        href={`/reviews?ride_id=${ride.id}&reviewed_user_id=${b.passenger.id}`}
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 text-white px-3 py-1.5 text-sm hover:bg-emerald-700"
+                                      >
+                                        Leave Review
+                                      </Link>
+                                    )}
                                   </div>
                                 </li>
                               ))}

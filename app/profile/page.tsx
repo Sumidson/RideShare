@@ -30,6 +30,7 @@ interface Booking {
   total_price: number;
   status: string;
   created_at: string;
+  passenger_confirmed_completed_at?: string | null;
   ride: {
     id: string;
     origin: string;
@@ -37,6 +38,7 @@ interface Booking {
     departure_time: string;
     status?: string;
     start_otp?: string | null;
+    driver_marked_complete_at?: string | null;
     driver: {
       id: string;
       username?: string;
@@ -52,6 +54,7 @@ const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [confirmingBookingId, setConfirmingBookingId] = useState<string | null>(null);
 
   const { user } = useSupabaseAuth();
   const router = useRouter();
@@ -76,6 +79,18 @@ const ProfilePage = () => {
       fetchBookings();
     }
   }, [user]);
+
+  const handleConfirmCompletion = async (bookingId: string) => {
+    setConfirmingBookingId(bookingId);
+    const { error } = await supabaseApiClient.confirmBookingCompletion(bookingId);
+    if (error) {
+      console.error('Failed to confirm completion:', error);
+    } else {
+      const { data } = await supabaseApiClient.getBookings();
+      setBookings((data as { bookings: Booking[] })?.bookings || []);
+    }
+    setConfirmingBookingId(null);
+  };
 
   const upcomingBookings = bookings.filter(booking =>
     ['PENDING', 'CONFIRMED', 'WAITLISTED'].includes(booking.status)
@@ -310,6 +325,16 @@ const ProfilePage = () => {
                                 <MessageSquare className="h-4 w-4" />
                                 Chat
                               </button>
+                              {booking.status === 'CONFIRMED' && booking.ride.driver_marked_complete_at && (
+                                <button
+                                  type="button"
+                                  onClick={() => void handleConfirmCompletion(booking.id)}
+                                  disabled={confirmingBookingId === booking.id}
+                                  className="mt-2 ml-2 inline-flex items-center gap-1.5 rounded-lg bg-blue-600 text-white px-3 py-1.5 text-sm hover:bg-blue-700 disabled:opacity-50"
+                                >
+                                  {confirmingBookingId === booking.id ? 'Confirming…' : 'Confirm Completion'}
+                                </button>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -370,6 +395,15 @@ const ProfilePage = () => {
                                 <MessageSquare className="h-4 w-4" />
                                 Chat
                               </button>
+                              {booking.status === 'COMPLETED' && (
+                                <button
+                                  type="button"
+                                  onClick={() => router.push(`/reviews?ride_id=${booking.ride.id}&reviewed_user_id=${booking.ride.driver.id}`)}
+                                  className="mt-2 ml-2 inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 text-white px-3 py-1.5 text-sm hover:bg-emerald-700"
+                                >
+                                  Leave Review
+                                </button>
+                              )}
                             </div>
                           </div>
                         </div>

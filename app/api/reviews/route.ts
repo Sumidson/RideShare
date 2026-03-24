@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
-import { verifyJWT } from '@/app/lib/auth'
 import { z } from 'zod'
 
 const createReviewSchema = z.object({
@@ -21,34 +20,43 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const decoded = verifyJWT(token)
-    if (!decoded?.userId) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    const { createClient } = await import('@supabase/supabase-js')
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    })
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
       return NextResponse.json(
         { error: 'Invalid token' },
         { status: 401 }
       )
     }
+    const userId = user.id
 
     const body = await request.json()
     const reviewData = createReviewSchema.parse(body)
 
     // Check if user is trying to review themselves
-    if (reviewData.reviewed_user_id === decoded.userId) {
+    if (reviewData.reviewed_user_id === userId) {
       return NextResponse.json(
         { error: 'Cannot review yourself' },
         { status: 400 }
       )
     }
 
-    // Check if ride exists and user participated in it
+    // Check ride and participation/completion constraints
     const ride = await prisma.ride.findUnique({
       where: { id: reviewData.ride_id },
       include: {
         bookings: {
-          where: {
-            passenger_id: decoded.userId,
-            status: 'CONFIRMED'
-          }
+          select: {
+            id: true,
+            passenger_id: true,
+            status: true,
+            passenger_confirmed_completed_at: true,
+          },
         }
       }
     })
@@ -60,9 +68,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if user participated in this ride (as driver or passenger)
-    const isDriver = ride.driver_id === decoded.userId
-    const isPassenger = ride.bookings.length > 0
+    const passengerBooking = ride.bookings.find((b) => b.passenger_id === userId)
+    const isDriver = ride.driver_id === userId
+    const isPassenger = Boolean(passengerBooking)
 
     if (!isDriver && !isPassenger) {
       return NextResponse.json(
@@ -71,11 +79,41 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    if (!ride.driver_marked_complete_at) {
+      return NextResponse.json(
+        { error: 'Driver must mark the ride complete before reviews' },
+        { status: 400 }
+      )
+    }
+
+    if (isPassenger) {
+      if (!passengerBooking || passengerBooking.status !== 'COMPLETED' || !passengerBooking.passenger_confirmed_completed_at) {
+        return NextResponse.json(
+          { error: 'Passenger must confirm ride completion before reviewing' },
+          { status: 400 }
+        )
+      }
+      if (reviewData.reviewed_user_id !== ride.driver_id) {
+        return NextResponse.json(
+          { error: 'Passenger can only review the ride driver' },
+          { status: 400 }
+        )
+      }
+    } else if (isDriver) {
+      const targetPassengerBooking = ride.bookings.find((b) => b.passenger_id === reviewData.reviewed_user_id)
+      if (!targetPassengerBooking || targetPassengerBooking.status !== 'COMPLETED' || !targetPassengerBooking.passenger_confirmed_completed_at) {
+        return NextResponse.json(
+          { error: 'Driver can only review passengers who confirmed completion' },
+          { status: 400 }
+        )
+      }
+    }
+
     // Check if user already reviewed this person for this ride
     const existingReview = await prisma.review.findFirst({
       where: {
         ride_id: reviewData.ride_id,
-        reviewer_id: decoded.userId,
+        reviewer_id: userId,
         reviewed_user_id: reviewData.reviewed_user_id
       }
     })
@@ -89,7 +127,7 @@ export async function POST(request: NextRequest) {
 
     const review = await prisma.review.create({
       data: {
-        reviewer_id: decoded.userId,
+        reviewer_id: userId,
         reviewed_user_id: reviewData.reviewed_user_id,
         ride_id: reviewData.ride_id,
         rating: reviewData.rating,

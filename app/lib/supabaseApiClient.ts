@@ -162,6 +162,18 @@ class SupabaseApiClient {
     })
   }
 
+  async markRideCompleteByDriver(rideId: string) {
+    return this.request(`/driver/rides/${rideId}/complete`, {
+      method: 'POST',
+    })
+  }
+
+  async confirmBookingCompletion(bookingId: string) {
+    return this.request(`/bookings/${bookingId}/confirm-completion`, {
+      method: 'POST',
+    })
+  }
+
   // User profile endpoints
   async getProfile() {
     return this.request('/users/profile')

@@ -57,7 +57,11 @@ export async function GET(request: NextRequest) {
 
     // Omit start_otp so driver never sees OTP; build explicit objects for reliable response
     const rideWithOtpFields = (r: (typeof rides)[0]) =>
-      r as (typeof r) & { started_at?: Date | null; otp_verified_at?: Date | null }
+      r as (typeof r) & {
+        started_at?: Date | null
+        otp_verified_at?: Date | null
+        driver_marked_complete_at?: Date | null
+      }
     const ridesForDriver = rides.map((ride) => {
       const r = rideWithOtpFields(ride)
       return {
@@ -74,6 +78,7 @@ export async function GET(request: NextRequest) {
         updated_at: ride.updated_at,
         started_at: r.started_at,
         otp_verified_at: r.otp_verified_at,
+        driver_marked_complete_at: r.driver_marked_complete_at,
         bookings: ride.bookings,
       }
     })

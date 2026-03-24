@@ -73,6 +73,7 @@ model Ride {
   start_otp       String?
   started_at      DateTime?
   otp_verified_at DateTime?
+  driver_marked_complete_at DateTime?
 
   // Relations
   driver   User      @relation("DriverRides", fields: [driver_id], references: [id], onDelete: Cascade)
@@ -91,6 +92,7 @@ model Booking {
   status       BookingStatus @default(PENDING)
   created_at   DateTime      @default(now())
   updated_at   DateTime      @updatedAt
+  passenger_confirmed_completed_at DateTime?
 
   // Relations
   ride      Ride @relation(fields: [ride_id], references: [id], onDelete: Cascade)

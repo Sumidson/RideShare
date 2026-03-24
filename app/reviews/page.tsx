@@ -5,7 +5,7 @@ import { Star, User, MessageCircle, Plus, ArrowLeft, Send } from 'lucide-react';
 import { useSupabaseAuth } from '@/app/providers/SupabaseAuthProvider';
 import { apiClient } from '@/app/lib/api';
 import AuthGuard from '@/components/auth/AuthGuard';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 interface Review {
   id: string;
@@ -29,6 +29,7 @@ interface CreateReviewData {
 
 const ReviewsPage = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useSupabaseAuth();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,6 +63,19 @@ const ReviewsPage = () => {
       fetchReviews();
     }
   }, [user, fetchReviews]);
+
+  useEffect(() => {
+    const reviewedUserId = searchParams.get('reviewed_user_id') || '';
+    const rideId = searchParams.get('ride_id') || '';
+    if (reviewedUserId && rideId) {
+      setShowCreateForm(true);
+      setCreateFormData((prev) => ({
+        ...prev,
+        reviewed_user_id: reviewedUserId,
+        ride_id: rideId,
+      }));
+    }
+  }, [searchParams]);
 
   const handleCreateReview = async () => {
     if (!createFormData.reviewed_user_id || !createFormData.ride_id) {

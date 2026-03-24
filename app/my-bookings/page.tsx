@@ -48,6 +48,7 @@ interface Booking {
   total_price: number;
   status: string;
   created_at: string;
+  passenger_confirmed_completed_at?: string | null;
   ride: {
     id: string;
     origin: string;
@@ -55,6 +56,7 @@ interface Booking {
     departure_time: string;
     status?: string;
     start_otp?: string | null;
+    driver_marked_complete_at?: string | null;
     driver: {
       id: string;
       username?: string;
@@ -102,28 +104,41 @@ function getStatusIcon(status: string) {
 export default function MyBookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [confirmingBookingId, setConfirmingBookingId] = useState<string | null>(null);
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchBookings = async () => {
-      try {
-        const { data, error } = await supabaseApiClient.getBookings();
-        if (error) {
-          console.error('Failed to fetch bookings:', error);
-          setBookings([]);
-        } else {
-          const res = data as { bookings?: Booking[] };
-          setBookings(res?.bookings ?? []);
-        }
-      } catch (err) {
-        console.error('Failed to fetch bookings:', err);
+  const fetchBookings = async () => {
+    try {
+      const { data, error } = await supabaseApiClient.getBookings();
+      if (error) {
+        console.error('Failed to fetch bookings:', error);
         setBookings([]);
-      } finally {
-        setLoading(false);
+      } else {
+        const res = data as { bookings?: Booking[] };
+        setBookings(res?.bookings ?? []);
       }
-    };
+    } catch (err) {
+      console.error('Failed to fetch bookings:', err);
+      setBookings([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchBookings();
   }, []);
+
+  const handleConfirmCompletion = async (bookingId: string) => {
+    setConfirmingBookingId(bookingId);
+    const { error } = await supabaseApiClient.confirmBookingCompletion(bookingId);
+    if (error) {
+      console.error('Failed to confirm completion:', error);
+    } else {
+      await fetchBookings();
+    }
+    setConfirmingBookingId(null);
+  };
 
   return (
     <AuthGuard>
@@ -244,6 +259,33 @@ export default function MyBookingsPage() {
                           <MessageCircle className="w-4 h-4" />
                           Chat
                         </button>
+                        {booking.status === 'CONFIRMED' && booking.ride.driver_marked_complete_at && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              void handleConfirmCompletion(booking.id);
+                            }}
+                            disabled={confirmingBookingId === booking.id}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 text-white px-3 py-1.5 text-sm hover:bg-blue-700 disabled:opacity-50"
+                          >
+                            {confirmingBookingId === booking.id ? 'Confirming…' : 'Confirm Completion'}
+                          </button>
+                        )}
+                        {booking.status === 'COMPLETED' && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              router.push(`/reviews?ride_id=${booking.ride.id}&reviewed_user_id=${booking.ride.driver.id}`);
+                            }}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 text-white px-3 py-1.5 text-sm hover:bg-emerald-700"
+                          >
+                            Leave Review
+                          </button>
+                        )}
                         <ChevronRight className="w-5 h-5 text-slate-400" />
                       </div>
                     </div>
