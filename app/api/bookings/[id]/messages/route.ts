@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 import { z } from 'zod'
+import { Prisma } from '@prisma/client'
 
 const sendMessageSchema = z.object({
   message: z.string().min(1).max(1000),
@@ -37,6 +38,135 @@ async function getBookingForUser(bookingId: string, userId: string) {
   return { booking: null, role: null as 'driver' | 'passenger' | null }
 }
 
+async function getMessagesForBooking(bookingId: string) {
+  const prismaWithOptionalModel = prisma as unknown as {
+    chatMessage?: {
+      findMany: (...args: unknown[]) => Promise<unknown[]>
+    }
+  }
+
+  if (prismaWithOptionalModel.chatMessage?.findMany) {
+    return prismaWithOptionalModel.chatMessage.findMany({
+      where: { booking_id: bookingId },
+      orderBy: { created_at: 'asc' },
+      include: {
+        sender: {
+          select: {
+            id: true,
+            full_name: true,
+            username: true,
+            avatar_url: true,
+          },
+        },
+      },
+    })
+  }
+
+  // Fallback for stale Prisma client delegates in long-running dev sessions.
+  return prisma.$queryRaw<
+    Array<{
+      id: string
+      sender_id: string
+      receiver_id: string
+      booking_id: string
+      message: string
+      created_at: Date
+      sender: { id: string; full_name: string | null; username: string | null; avatar_url: string | null }
+    }>
+  >(Prisma.sql`
+    SELECT
+      cm.id,
+      cm.sender_id,
+      cm.receiver_id,
+      cm.booking_id,
+      cm.message,
+      cm.created_at,
+      json_build_object(
+        'id', u.id,
+        'full_name', u.full_name,
+        'username', u.username,
+        'avatar_url', u.avatar_url
+      ) AS sender
+    FROM chat_messages cm
+    JOIN users u ON u.id = cm.sender_id
+    WHERE cm.booking_id = ${bookingId}
+    ORDER BY cm.created_at ASC
+  `)
+}
+
+async function createMessageForBooking(
+  bookingId: string,
+  senderId: string,
+  receiverId: string,
+  messageText: string
+) {
+  const prismaWithOptionalModel = prisma as unknown as {
+    chatMessage?: {
+      create: (...args: unknown[]) => Promise<unknown>
+    }
+  }
+
+  if (prismaWithOptionalModel.chatMessage?.create) {
+    return prismaWithOptionalModel.chatMessage.create({
+      data: {
+        booking_id: bookingId,
+        sender_id: senderId,
+        receiver_id: receiverId,
+        message: messageText,
+      },
+      include: {
+        sender: {
+          select: {
+            id: true,
+            full_name: true,
+            username: true,
+            avatar_url: true,
+          },
+        },
+      },
+    })
+  }
+
+  const id = crypto.randomUUID()
+  await prisma.$executeRaw(
+    Prisma.sql`
+      INSERT INTO chat_messages (id, booking_id, sender_id, receiver_id, message, created_at)
+      VALUES (${id}, ${bookingId}, ${senderId}, ${receiverId}, ${messageText}, NOW())
+    `
+  )
+
+  const rows = await prisma.$queryRaw<
+    Array<{
+      id: string
+      sender_id: string
+      receiver_id: string
+      booking_id: string
+      message: string
+      created_at: Date
+      sender: { id: string; full_name: string | null; username: string | null; avatar_url: string | null }
+    }>
+  >(Prisma.sql`
+    SELECT
+      cm.id,
+      cm.sender_id,
+      cm.receiver_id,
+      cm.booking_id,
+      cm.message,
+      cm.created_at,
+      json_build_object(
+        'id', u.id,
+        'full_name', u.full_name,
+        'username', u.username,
+        'avatar_url', u.avatar_url
+      ) AS sender
+    FROM chat_messages cm
+    JOIN users u ON u.id = cm.sender_id
+    WHERE cm.id = ${id}
+    LIMIT 1
+  `)
+  return rows[0] ?? null
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -54,20 +184,7 @@ export async function GET(
       return NextResponse.json({ error: 'Booking not found or access denied' }, { status: 404 })
     }
 
-    const messages = await prisma.chatMessage.findMany({
-      where: { booking_id: id },
-      orderBy: { created_at: 'asc' },
-      include: {
-        sender: {
-          select: {
-            id: true,
-            full_name: true,
-            username: true,
-            avatar_url: true,
-          },
-        },
-      },
-    })
+    const messages = await getMessagesForBooking(id)
 
     return NextResponse.json({ messages })
   } catch (error) {
@@ -98,24 +215,12 @@ export async function POST(
     const receiverId =
       role === 'driver' ? booking.passenger_id : booking.ride.driver_id
 
-    const message = await prisma.chatMessage.create({
-      data: {
-        booking_id: id,
-        sender_id: user.id,
-        receiver_id: receiverId,
-        message: parsed.message.trim(),
-      },
-      include: {
-        sender: {
-          select: {
-            id: true,
-            full_name: true,
-            username: true,
-            avatar_url: true,
-          },
-        },
-      },
-    })
+    const message = await createMessageForBooking(
+      id,
+      user.id,
+      receiverId,
+      parsed.message.trim()
+    )
 
     return NextResponse.json({ message }, { status: 201 })
   } catch (error) {
