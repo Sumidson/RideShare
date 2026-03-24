@@ -69,6 +69,8 @@ function getStatusColor(status: string) {
   switch (status) {
     case 'CONFIRMED':
       return 'text-green-600 bg-green-50';
+    case 'WAITLISTED':
+      return 'text-violet-700 bg-violet-50';
     case 'PENDING':
       return 'text-yellow-600 bg-yellow-50';
     case 'COMPLETED':
@@ -84,6 +86,8 @@ function getStatusIcon(status: string) {
   switch (status) {
     case 'CONFIRMED':
       return <CheckCircle className="h-4 w-4" />;
+    case 'WAITLISTED':
+      return <AlertCircle className="h-4 w-4" />;
     case 'PENDING':
       return <AlertCircle className="h-4 w-4" />;
     case 'COMPLETED':

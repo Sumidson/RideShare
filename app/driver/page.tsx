@@ -735,6 +735,8 @@ export default function DriverPage() {
                                       className={`text-xs font-medium ${
                                         b.status === 'CONFIRMED'
                                           ? 'text-green-600'
+                                          : b.status === 'WAITLISTED'
+                                            ? 'text-violet-700'
                                           : b.status === 'PENDING'
                                             ? 'text-amber-600'
                                             : 'text-slate-500'

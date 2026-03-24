@@ -78,7 +78,7 @@ const ProfilePage = () => {
   }, [user]);
 
   const upcomingBookings = bookings.filter(booking =>
-    ['PENDING', 'CONFIRMED'].includes(booking.status)
+    ['PENDING', 'CONFIRMED', 'WAITLISTED'].includes(booking.status)
   );
 
   const pastBookings = bookings.filter(booking =>
@@ -88,6 +88,7 @@ const ProfilePage = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'CONFIRMED': return 'text-green-600 bg-green-50';
+      case 'WAITLISTED': return 'text-violet-700 bg-violet-50';
       case 'PENDING': return 'text-yellow-600 bg-yellow-50';
       case 'COMPLETED': return 'text-blue-600 bg-blue-50';
       case 'CANCELLED': return 'text-red-600 bg-red-50';
@@ -98,6 +99,7 @@ const ProfilePage = () => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'CONFIRMED': return <CheckCircle className="h-4 w-4" />;
+      case 'WAITLISTED': return <AlertCircle className="h-4 w-4" />;
       case 'PENDING': return <AlertCircle className="h-4 w-4" />;
       case 'COMPLETED': return <CheckCircle className="h-4 w-4" />;
       case 'CANCELLED': return <XCircle className="h-4 w-4" />;

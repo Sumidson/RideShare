@@ -137,7 +137,7 @@ class SupabaseApiClient {
   }
 
   async updateBooking(id: string, data: {
-    status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED'
+    status: 'PENDING' | 'CONFIRMED' | 'WAITLISTED' | 'CANCELLED' | 'COMPLETED'
   }) {
     return this.request(`/bookings/${id}`, {
       method: 'PUT',

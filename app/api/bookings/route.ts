@@ -3,6 +3,7 @@ import { prisma } from '@/app/lib/prisma'
 // import { verifyJWT } from '@/app/lib/auth'
 import { z } from 'zod'
 import { Prisma, BookingStatus } from '@prisma/client'
+import { promoteWaitlistedBookings } from '@/app/lib/waitlist'
 
 const createBookingSchema = z.object({
   ride_id: z.string().uuid(),
@@ -108,20 +109,13 @@ export async function POST(request: NextRequest) {
 
     const availableSeats = ride.available_seats - bookedSeats
 
-    if (bookingData.seats_booked > availableSeats) {
-      return NextResponse.json(
-        { error: `Only ${availableSeats} seats available` },
-        { status: 400 }
-      )
-    }
-
     // Check if user already has a booking for this ride
     const existingBooking = await prisma.booking.findFirst({
       where: {
         ride_id: bookingData.ride_id,
         passenger_id: userId,
         status: {
-          in: ['PENDING', 'CONFIRMED']
+          in: ['PENDING', 'CONFIRMED', 'WAITLISTED']
         }
       }
     })
@@ -135,12 +129,14 @@ export async function POST(request: NextRequest) {
 
     const totalPrice = bookingData.seats_booked * ride.price_per_seat
 
+    const shouldWaitlist = bookingData.seats_booked > availableSeats
     const booking = await prisma.booking.create({
       data: {
         ride_id: bookingData.ride_id,
         passenger_id: userId,
         seats_booked: bookingData.seats_booked,
-        total_price: totalPrice
+        total_price: totalPrice,
+        status: shouldWaitlist ? 'WAITLISTED' : 'PENDING',
       },
       include: {
         ride: {
@@ -166,6 +162,25 @@ export async function POST(request: NextRequest) {
         }
       }
     })
+
+    if (shouldWaitlist) {
+      const waitlistPosition = await prisma.booking.count({
+        where: {
+          ride_id: bookingData.ride_id,
+          status: 'WAITLISTED',
+          created_at: { lte: booking.created_at },
+        },
+      })
+
+      // Try instant auto-promotion if seats opened by race conditions
+      await promoteWaitlistedBookings(bookingData.ride_id)
+
+      return NextResponse.json({
+        message: 'Ride is full. You have been added to the waitlist.',
+        booking,
+        waitlist_position: waitlistPosition,
+      }, { status: 201 })
+    }
 
     return NextResponse.json({
       message: 'Booking created successfully',

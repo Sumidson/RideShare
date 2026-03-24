@@ -258,7 +258,14 @@ const RidesPage = () => {
                       <div className="text-gray-500 text-sm">{new Date(ride.departure_time).toLocaleString()}</div>
                     </div>
                     <div className="lg:col-span-3">
-                      <div className="text-gray-900">Seats: {ride.available_seats}</div>
+                      <div className="text-gray-900">
+                        Seats: {ride.available_seats}
+                        {ride.available_seats === 0 && (
+                          <span className="ml-2 inline-flex px-2 py-0.5 rounded text-xs font-medium bg-violet-100 text-violet-700">
+                            Waitlist
+                          </span>
+                        )}
+                      </div>
                       <div className="text-gray-900">Price: ₹{ride.price_per_seat}</div>
                     </div>
                     <div className="lg:col-span-2 text-right flex flex-col sm:flex-row items-end gap-2 justify-end">
@@ -282,7 +289,7 @@ const RidesPage = () => {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        <span>Book Now</span>
+                        <span>{ride.available_seats > 0 ? 'Book Now' : 'Join Waitlist'}</span>
                         <ArrowRight className="w-4 h-4" />
                       </motion.button>
                     </div>

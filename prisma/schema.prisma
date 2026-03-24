@@ -149,6 +149,7 @@ enum RideStatus {
 enum BookingStatus {
   PENDING
   CONFIRMED
+  WAITLISTED
   CANCELLED
   COMPLETED
 }

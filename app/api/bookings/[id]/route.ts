@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 import { z } from 'zod'
+import { promoteWaitlistedBookings } from '@/app/lib/waitlist'
 
 const updateBookingSchema = z.object({
-  status: z.enum(['PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED'])
+  status: z.enum(['PENDING', 'CONFIRMED', 'WAITLISTED', 'CANCELLED', 'COMPLETED'])
 })
 
 async function getUserFromToken(token: string | null) {
@@ -182,6 +183,10 @@ export async function PUT(
       }
     })
 
+    if (updateData.status === 'CANCELLED') {
+      await promoteWaitlistedBookings(updatedBooking.ride_id)
+    }
+
     return NextResponse.json({
       message: 'Booking updated successfully',
       booking: updatedBooking
@@ -221,6 +226,8 @@ export async function DELETE(
     const booking = await prisma.booking.findUnique({
       where: { id: id },
       select: {
+        id: true,
+        ride_id: true,
         passenger_id: true,
         status: true
       }
@@ -241,10 +248,10 @@ export async function DELETE(
       )
     }
 
-    // Only allow cancellation of pending bookings
-    if (booking.status !== 'PENDING') {
+    // Allow passenger cancellation for pending, waitlisted, or confirmed bookings
+    if (!['PENDING', 'WAITLISTED', 'CONFIRMED'].includes(booking.status)) {
       return NextResponse.json(
-        { error: 'Can only cancel pending bookings' },
+        { error: 'This booking can no longer be cancelled' },
         { status: 400 }
       )
     }
@@ -252,6 +259,8 @@ export async function DELETE(
     await prisma.booking.delete({
       where: { id: id }
     })
+
+    await promoteWaitlistedBookings(booking.ride_id)
 
     return NextResponse.json({
       message: 'Booking cancelled successfully'

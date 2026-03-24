@@ -11,9 +11,6 @@ export async function GET(request: NextRequest) {
     const now = new Date()
     const whereClause: Record<string, unknown> = {
       status: 'ACTIVE',
-      available_seats: {
-        gt: 0
-      }
     }
 
     // Upcoming rides only: departure_time in the future (when no date filter)
@@ -62,6 +59,14 @@ export async function GET(request: NextRequest) {
           select: {
             bookings: true
           }
+        },
+        bookings: {
+          where: {
+            status: 'CONFIRMED'
+          },
+          select: {
+            seats_booked: true
+          }
         }
       },
       orderBy: {
@@ -69,10 +74,21 @@ export async function GET(request: NextRequest) {
       }
     })
 
+    const ridesWithRemainingSeats = rides.map((ride) => {
+      const confirmedSeats = ride.bookings.reduce((sum, b) => sum + b.seats_booked, 0)
+      const remainingSeats = Math.max(ride.available_seats - confirmedSeats, 0)
+      const rideWithoutBookings = { ...ride }
+      delete (rideWithoutBookings as { bookings?: unknown }).bookings
+      return {
+        ...rideWithoutBookings,
+        available_seats: remainingSeats,
+      }
+    })
+
     return NextResponse.json({
       success: true,
-      data: rides,
-      count: rides.length
+      data: ridesWithRemainingSeats,
+      count: ridesWithRemainingSeats.length
     })
   } catch (error) {
     console.error('Error fetching rides:', error)
