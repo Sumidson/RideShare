@@ -85,8 +85,10 @@ export default function BookingChatPage() {
   }, [bookingId, loadMessages])
 
   // Supabase Realtime subscription (WebSocket) for new chat messages.
+  // Important: only subscribe once we have the authenticated user, otherwise
+  // RLS can block delivery for the receiver.
   useEffect(() => {
-    if (!bookingId) return
+    if (!bookingId || !user) return
 
     const channel = supabase
       .channel(`booking-chat-${bookingId}`)
@@ -112,7 +114,7 @@ export default function BookingChatPage() {
       if (debounceRef.current) clearTimeout(debounceRef.current)
       supabase.removeChannel(channel)
     }
-  }, [bookingId, loadMessages])
+  }, [bookingId, user, loadMessages])
 
   useEffect(() => {
     scrollToBottom()
