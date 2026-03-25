@@ -7,6 +7,7 @@ import { MessageCircle, Send, ArrowLeft } from 'lucide-react'
 import AuthGuard from '@/components/auth/AuthGuard'
 import { useSupabaseAuth } from '@/app/providers/SupabaseAuthProvider'
 import { supabaseApiClient } from '@/app/lib/supabaseApiClient'
+import { supabase } from '@/lib/supabase'
 
 interface ChatMessage {
   id: string
@@ -40,6 +41,7 @@ export default function BookingChatPage() {
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const endRef = useRef<HTMLDivElement | null>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const title = useMemo(() => {
     const origin = booking?.ride?.origin
@@ -82,12 +84,34 @@ export default function BookingChatPage() {
     init()
   }, [bookingId, loadMessages])
 
+  // Supabase Realtime subscription (WebSocket) for new chat messages.
   useEffect(() => {
     if (!bookingId) return
-    const interval = setInterval(() => {
-      void loadMessages()
-    }, 3000)
-    return () => clearInterval(interval)
+
+    const channel = supabase
+      .channel(`booking-chat-${bookingId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'chat_messages',
+          filter: `booking_id=eq.${bookingId}`,
+        },
+        () => {
+          // Refresh the thread to include sender info.
+          if (debounceRef.current) clearTimeout(debounceRef.current)
+          debounceRef.current = setTimeout(() => {
+            void loadMessages()
+          }, 150)
+        }
+      )
+      .subscribe()
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+      supabase.removeChannel(channel)
+    }
   }, [bookingId, loadMessages])
 
   useEffect(() => {
@@ -103,7 +127,8 @@ export default function BookingChatPage() {
       setError(sendError)
     } else {
       setNewMessage('')
-      await loadMessages()
+      // Realtime subscription will refresh the list; fallback refresh just in case.
+      void loadMessages()
     }
     setSending(false)
   }
