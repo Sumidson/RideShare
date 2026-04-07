@@ -175,18 +175,7 @@ class SupabaseApiClient {
     })
   }
 
-  async createPaymentOrder(data: { ride_id: string; seats_booked: number }) {
-    return this.request('/payments/create-order', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    })
-  }
-
-  async verifyPayment(data: {
-    razorpay_order_id: string
-    razorpay_payment_id: string
-    razorpay_signature: string
-  }) {
+  async verifyPayment(data: { ride_id: string; seats_booked: number; razorpay_payment_id: string }) {
     return this.request('/payments/verify', {
       method: 'POST',
       body: JSON.stringify(data),

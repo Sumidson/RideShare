@@ -94,40 +94,35 @@ export default function BookingDetailsPage() {
         return
       }
 
-      const { data: orderData, error: orderError } = await supabaseApiClient.createPaymentOrder({
-        ride_id: String(rideId),
-        seats_booked: Number(seats),
-      })
-      if (orderError) {
-        setError(orderError)
-        return
-      }
-
-      const payload = orderData as {
-        key_id: string
-        order: { id: string; amount: number; currency: string }
-        amount: number
-        currency: string
-      }
-
       if (!window.Razorpay) {
         setError('Razorpay checkout unavailable.')
         return
       }
 
+      const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID
+      if (!keyId) {
+        setError('Razorpay key is missing. Set NEXT_PUBLIC_RAZORPAY_KEY_ID in your env.')
+        return
+      }
+
+      const amountPaise = Math.round(totalPrice * 100)
+      if (!Number.isFinite(amountPaise) || amountPaise <= 0) {
+        setError('Invalid amount.')
+        return
+      }
+
       const rzp = new window.Razorpay({
-        key: payload.key_id,
-        amount: payload.amount,
-        currency: payload.currency,
+        key: keyId,
+        amount: amountPaise,
+        currency: 'INR',
         name: 'RideShare',
         description: `Booking for ${ride.origin} → ${ride.destination}`,
-        order_id: payload.order.id,
-        handler: async (resp: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
+        handler: async (resp: { razorpay_payment_id: string }) => {
           try {
             const { error: verifyError } = await supabaseApiClient.verifyPayment({
-              razorpay_order_id: resp.razorpay_order_id,
+              ride_id: String(rideId),
+              seats_booked: Number(seats),
               razorpay_payment_id: resp.razorpay_payment_id,
-              razorpay_signature: resp.razorpay_signature,
             })
             if (verifyError) {
               setError(verifyError)

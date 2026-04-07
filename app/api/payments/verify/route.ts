@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import crypto from 'crypto'
+import { prisma } from '@/app/lib/prisma'
 
 const bodySchema = z.object({
-  razorpay_order_id: z.string().min(1),
+  ride_id: z.string().uuid(),
+  seats_booked: z.number().int().min(1).max(8),
   razorpay_payment_id: z.string().min(1),
-  razorpay_signature: z.string().min(1),
 })
 
 async function getUserFromToken(token: string | null) {
@@ -29,16 +29,43 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const parsed = bodySchema.parse(body)
 
-    const secret = process.env.RAZORPAY_KEY_SECRET
-    if (!secret) return NextResponse.json({ error: 'Razorpay is not configured' }, { status: 500 })
+    const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID
+    const keySecret = process.env.RAZORPAY_KEY_SECRET
+    if (!keyId || !keySecret) return NextResponse.json({ error: 'Razorpay is not configured' }, { status: 500 })
 
-    const payload = `${parsed.razorpay_order_id}|${parsed.razorpay_payment_id}`
-    const expected = crypto.createHmac('sha256', secret).update(payload).digest('hex')
-    const ok = expected === parsed.razorpay_signature
+    const ride = await prisma.ride.findUnique({
+      where: { id: parsed.ride_id },
+      select: { id: true, driver_id: true, price_per_seat: true, status: true },
+    })
+    if (!ride) return NextResponse.json({ error: 'Ride not found' }, { status: 404 })
+    if (ride.status !== 'ACTIVE') return NextResponse.json({ error: 'Ride is not available' }, { status: 400 })
+    if (ride.driver_id === user.id) return NextResponse.json({ error: 'Cannot book your own ride' }, { status: 400 })
 
-    if (!ok) return NextResponse.json({ verified: false, error: 'Invalid payment signature' }, { status: 400 })
+    const expectedAmount = Math.round(parsed.seats_booked * ride.price_per_seat * 100)
+    if (expectedAmount <= 0) return NextResponse.json({ error: 'Invalid amount' }, { status: 400 })
 
-    return NextResponse.json({ verified: true })
+    const auth = Buffer.from(`${keyId}:${keySecret}`).toString('base64')
+    const res = await fetch(`https://api.razorpay.com/v1/payments/${encodeURIComponent(parsed.razorpay_payment_id)}`, {
+      headers: {
+        Authorization: `Basic ${auth}`,
+      },
+    })
+    const payment = await res.json().catch(() => null)
+    if (!res.ok || !payment) {
+      return NextResponse.json({ error: 'Failed to fetch payment from Razorpay', details: payment }, { status: 502 })
+    }
+
+    if (payment.currency !== 'INR') {
+      return NextResponse.json({ verified: false, error: 'Invalid currency' }, { status: 400 })
+    }
+    if (Number(payment.amount) !== expectedAmount) {
+      return NextResponse.json({ verified: false, error: 'Amount mismatch' }, { status: 400 })
+    }
+    if (!['captured', 'authorized'].includes(String(payment.status))) {
+      return NextResponse.json({ verified: false, error: `Payment not successful: ${payment.status}` }, { status: 400 })
+    }
+
+    return NextResponse.json({ verified: true, payment })
   } catch (error) {
     console.error('Error verifying payment:', error)
     if (error instanceof z.ZodError) {
