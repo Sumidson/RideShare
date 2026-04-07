@@ -7,6 +7,12 @@ import { motion } from 'framer-motion'
 import { MapPin, Clock, User, Car, IndianRupee, ArrowLeft, Bookmark, BookmarkCheck } from 'lucide-react'
 import { addSavedRide, getSavedRidesFromStorage } from '@/app/lib/savedRides'
 
+declare global {
+  interface Window {
+    Razorpay?: new (options: Record<string, unknown>) => { open: () => void }
+  }
+}
+
 interface Ride {
   id: string
   origin: string
@@ -29,11 +35,24 @@ export default function BookingDetailsPage() {
   const rideId = params?.Id
   const router = useRouter()
   const [seats, setSeats] = useState(1)
-  const [loading, setLoading] = useState(false)
   const [rideLoading, setRideLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [ride, setRide] = useState<Ride | null>(null)
   const [isSaved, setIsSaved] = useState(false)
+  const [paymentLoading, setPaymentLoading] = useState(false)
+
+  const loadRazorpay = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if (typeof window === 'undefined') return resolve(false)
+      if (window.Razorpay) return resolve(true)
+      const script = document.createElement('script')
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+      script.async = true
+      script.onload = () => resolve(true)
+      script.onerror = () => resolve(false)
+      document.body.appendChild(script)
+    })
+  }
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -62,23 +81,85 @@ export default function BookingDetailsPage() {
     fetchRide()
   }, [rideId])
 
-  const handleBook = async () => {
+  const handlePayAndBook = async () => {
     if (!ride) return
 
-    setLoading(true)
+    setPaymentLoading(true)
     setError(null)
 
-    const { error } = await supabaseApiClient.createBooking({
-      ride_id: String(rideId),
-      seats_booked: Number(seats)
-    })
+    try {
+      const ok = await loadRazorpay()
+      if (!ok) {
+        setError('Failed to load Razorpay checkout. Please disable adblock and retry.')
+        return
+      }
 
-    if (error) {
-      setError(error)
-    } else {
-      router.push('/profile')
+      const { data: orderData, error: orderError } = await supabaseApiClient.createPaymentOrder({
+        ride_id: String(rideId),
+        seats_booked: Number(seats),
+      })
+      if (orderError) {
+        setError(orderError)
+        return
+      }
+
+      const payload = orderData as {
+        key_id: string
+        order: { id: string; amount: number; currency: string }
+        amount: number
+        currency: string
+      }
+
+      if (!window.Razorpay) {
+        setError('Razorpay checkout unavailable.')
+        return
+      }
+
+      const rzp = new window.Razorpay({
+        key: payload.key_id,
+        amount: payload.amount,
+        currency: payload.currency,
+        name: 'RideShare',
+        description: `Booking for ${ride.origin} → ${ride.destination}`,
+        order_id: payload.order.id,
+        handler: async (resp: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
+          try {
+            const { error: verifyError } = await supabaseApiClient.verifyPayment({
+              razorpay_order_id: resp.razorpay_order_id,
+              razorpay_payment_id: resp.razorpay_payment_id,
+              razorpay_signature: resp.razorpay_signature,
+            })
+            if (verifyError) {
+              setError(verifyError)
+              return
+            }
+
+            const { error: bookingError } = await supabaseApiClient.createBooking({
+              ride_id: String(rideId),
+              seats_booked: Number(seats),
+            })
+            if (bookingError) {
+              setError(bookingError)
+              return
+            }
+            router.push('/profile')
+          } catch (e) {
+            console.error(e)
+            setError('Payment succeeded but booking failed. Please contact support.')
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setError('Payment cancelled.')
+          },
+        },
+        theme: { color: '#0f172a' },
+      })
+
+      rzp.open()
+    } finally {
+      setPaymentLoading(false)
     }
-    setLoading(false)
   }
 
   const totalPrice = ride ? seats * ride.price_per_seat : 0
@@ -121,7 +202,7 @@ export default function BookingDetailsPage() {
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-gradient-to-br from-slate-100 via-gray-50 to-slate-200">
+      <div className="min-h-screen bg-linear-to-br from-slate-100 via-gray-50 to-slate-200">
         <div className="max-w-4xl mx-auto p-8">
           {/* Header */}
           <motion.div
@@ -280,14 +361,14 @@ export default function BookingDetailsPage() {
                 )}
 
                 <button
-                  disabled={loading}
-                  onClick={handleBook}
+                  disabled={paymentLoading}
+                  onClick={handlePayAndBook}
                   className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  {loading
-                    ? 'Processing...'
+                  {paymentLoading
+                    ? 'Opening payment...'
                     : ride.available_seats > 0 && seats <= ride.available_seats
-                      ? 'Confirm Booking'
+                      ? 'Pay & Confirm Booking'
                       : 'Join Waitlist'}
                 </button>
               </div>

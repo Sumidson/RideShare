@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'
+const isServer = typeof window === 'undefined'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || (isServer ? 'http://localhost:3000/api' : '/api')
 
 interface ApiResponse<T = unknown> {
   data?: T
@@ -171,6 +172,24 @@ class SupabaseApiClient {
   async confirmBookingCompletion(bookingId: string) {
     return this.request(`/bookings/${bookingId}/confirm-completion`, {
       method: 'POST',
+    })
+  }
+
+  async createPaymentOrder(data: { ride_id: string; seats_booked: number }) {
+    return this.request('/payments/create-order', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async verifyPayment(data: {
+    razorpay_order_id: string
+    razorpay_payment_id: string
+    razorpay_signature: string
+  }) {
+    return this.request('/payments/verify', {
+      method: 'POST',
+      body: JSON.stringify(data),
     })
   }
 

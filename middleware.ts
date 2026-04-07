@@ -5,7 +5,8 @@ export async function middleware(request: NextRequest) {
   const fullyProtectedRoutes = [
     '/api/bookings',
     '/api/users/profile',
-    '/api/reviews'
+    '/api/reviews',
+    '/api/payments'
   ]
 
   // Define routes that only require auth for POST/PUT/DELETE (not GET)
@@ -49,6 +50,7 @@ export const config = {
   matcher: [
     '/api/rides/:path*',
     '/api/bookings/:path*',
+    '/api/payments/:path*',
     '/api/users/profile/:path*',
     '/api/reviews/:path*'
   ]
