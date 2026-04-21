@@ -50,7 +50,7 @@ export default function AboutPage() {
         {
             name: "Avi Srivastava",
             role: "Co-Creator",
-            image: "/avi.jpeg",
+            image: "https://ui-avatars.com/api/?name=Avi+Srivastava&background=0f172a&color=fff&size=256",
             bio: "Tech enthusiast driving innovation in ridesharing algorithms."
         },
         {
