@@ -1,6 +1,6 @@
 "use client"
 import React from 'react';
-import { Shield, Users, Clock, Globe, ArrowRight, CheckCircle, Smartphone, Github, Twitter, Linkedin } from 'lucide-react';
+import { Shield, Users, Clock, Globe, ArrowRight, CheckCircle, Smartphone, Github, Linkedin } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const sectionVariants = {
@@ -50,7 +50,7 @@ export default function AboutPage() {
         {
             name: "Avi Srivastava",
             role: "Co-Creator",
-            image: "https://ui-avatars.com/api/?name=Avi+Srivastava&background=0f172a&color=fff&size=256", // Placeholder: Replace with actual image path
+            image: "/avi.jpeg",
             bio: "Tech enthusiast driving innovation in ridesharing algorithms."
         },
         {
@@ -58,6 +58,12 @@ export default function AboutPage() {
             role: "Co-Creator",
             image: "https://ui-avatars.com/api/?name=Vyoum&background=2563eb&color=fff&size=256", // Placeholder: Replace with actual image path
             bio: "Creative mind crafting intuitive and beautiful user experiences."
+        },
+        {
+            name: "Daksha Nagarkoti",
+            role: "Co-Creator",
+            image: "https://ui-avatars.com/api/?name=Daksha+Nagarkoti&background=7c3aed&color=fff&size=256",
+            bio: "Passionate builder focused on creating reliable and impactful mobility solutions."
         }
     ];
 
@@ -261,15 +267,24 @@ export default function AboutPage() {
                                 </p>
 
                                 <div className="flex justify-center gap-4">
-                                    <button className="p-2 bg-slate-800/50 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-all">
+                                    <a
+                                        href="https://github.com/avinormie"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="p-2 bg-slate-800/50 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-all"
+                                        aria-label={`${member.name} GitHub`}
+                                    >
                                         <Github className="w-5 h-5" />
-                                    </button>
-                                    <button className="p-2 bg-slate-800/50 rounded-lg text-slate-400 hover:text-blue-400 hover:bg-slate-700 transition-all">
-                                        <Twitter className="w-5 h-5" />
-                                    </button>
-                                    <button className="p-2 bg-slate-800/50 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-slate-700 transition-all">
+                                    </a>
+                                    <a
+                                        href="https://www.linkedin.com/in/avi-srivastava26/"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="p-2 bg-slate-800/50 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-slate-700 transition-all"
+                                        aria-label={`${member.name} LinkedIn`}
+                                    >
                                         <Linkedin className="w-5 h-5" />
-                                    </button>
+                                    </a>
                                 </div>
                             </motion.div>
                         ))}
