@@ -28,7 +28,7 @@
     "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.511.0",
-     "next": "15.5.12",
+    "next": "15.5.12",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "tailwind": "^2.3.1",
