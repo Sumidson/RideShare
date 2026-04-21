@@ -60,7 +60,7 @@ export default function AboutPage() {
             bio: "Creative mind crafting intuitive and beautiful user experiences."
         },
         {
-            name: "Daksha Nagarkoti",
+            name: "Daksh Nagarkoti",
             role: "Co-Creator",
             image: "https://ui-avatars.com/api/?name=Daksha+Nagarkoti&background=7c3aed&color=fff&size=256",
             bio: "Passionate builder focused on creating reliable and impactful mobility solutions."
